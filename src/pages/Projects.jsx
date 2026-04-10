@@ -1,0 +1,90 @@
+import PageTransition from '../components/PageTransition'
+import { motion } from 'framer-motion'
+
+const PROJECTS = [
+  {
+    title: 'Project Alpha',
+    desc: 'A high-performance REST API system built with Spring Boot, handling 10k+ requests/sec with DynamoDB persistence.',
+    tech: ['Java', 'Spring Boot', 'AWS DynamoDB', 'Docker'],
+    github: 'https://github.com/anshulsharma/project-alpha',
+    live: null,
+    color: '#FF5800',
+  },
+  {
+    title: 'Portfolio Website',
+    desc: 'This very website! Built with React, Three.js, Framer Motion, and hosted on AWS Amplify with Rubik\'s cube themed navigation.',
+    tech: ['React', 'Three.js', 'Tailwind CSS', 'AWS Amplify'],
+    github: 'https://github.com/anshulsharma/portfolio',
+    live: 'https://anshulsharma.dev',
+    color: '#0045AD',
+  },
+  {
+    title: 'Interview Platform',
+    desc: 'A mock interview scheduling and Q&A management platform with admin dashboard, email notifications via SES, and categorized Q&A library.',
+    tech: ['React', 'Node.js', 'AWS Lambda', 'DynamoDB', 'SES'],
+    github: 'https://github.com/anshulsharma/interview-platform',
+    live: null,
+    color: '#009E60',
+  },
+  {
+    title: 'Add Your Projects',
+    desc: 'Update this file with your real project details in src/pages/Projects.jsx',
+    tech: ['...'],
+    github: null,
+    live: null,
+    color: '#FFD500',
+  },
+]
+
+export default function Projects() {
+  return (
+    <PageTransition>
+      <div className="max-w-5xl mx-auto px-6 py-16">
+        <h2 className="section-title">Projects</h2>
+
+        <div className="grid sm:grid-cols-2 gap-6">
+          {PROJECTS.map((p, i) => (
+            <motion.div
+              key={p.title}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="glass-card hover:border-white/30 transition-all duration-300 group"
+              style={{ borderTop: `3px solid ${p.color}` }}
+            >
+              <h3 className="font-display font-bold text-lg text-white group-hover:text-[#FF5800] transition-colors">
+                {p.title}
+              </h3>
+              <p className="mt-2 text-white/60 text-sm leading-relaxed font-body">{p.desc}</p>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {p.tech.map((t) => (
+                  <span
+                    key={t}
+                    className="px-2 py-0.5 text-xs rounded font-body text-white/70"
+                    style={{ background: `${p.color}22`, border: `1px solid ${p.color}55` }}
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+
+              <div className="mt-4 flex gap-3">
+                {p.github && (
+                  <a href={p.github} target="_blank" rel="noopener noreferrer" className="btn-outline text-xs px-4 py-2">
+                    GitHub
+                  </a>
+                )}
+                {p.live && (
+                  <a href={p.live} target="_blank" rel="noopener noreferrer" className="btn-primary text-xs px-4 py-2">
+                    Live Demo
+                  </a>
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </PageTransition>
+  )
+}
