@@ -81,7 +81,7 @@ function SplashScreen({ onDone }) {
           transition={{ delay: 1, duration: 1 }}
           className="mt-4 text-white/60 text-lg font-light tracking-widest font-body"
         >
-          Software Developer · Rubik's Cube Enthusiast
+          Senior Software Engineer · Rubik's Cube Enthusiast
         </motion.p>
 
         {/* Loading cube dots row */}
@@ -144,7 +144,7 @@ export default function Home() {
                 ANSHUL SHARMA
               </h1>
               <p className="mt-2 text-white/50 text-sm tracking-widest font-body uppercase">
-                Software Developer · Rubik's Cube Enthusiast
+                Senior Software Engineer · Rubik's Cube Enthusiast
               </p>
             </motion.header>
 
@@ -183,11 +183,12 @@ export default function Home() {
                 <div>
                   <p className="text-white/70 text-base leading-relaxed max-w-sm font-body">
                     Passionate software developer who loves solving complex problems —
-                    both in code and on the Rubik's cube. Building scalable systems,
-                    mentoring aspiring engineers, and turning coffee into clean code.
+                    both in code and on the Rubik's cube. Building scalable systems with
+                    Vue, JavaScript, .NET, and AWS, mentoring aspiring engineers, and
+                    turning coffee into clean code.
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2 justify-center md:justify-start">
-                    {['Java', 'React', 'AWS', 'Spring Boot', 'Rubik\'s Cube 🧩'].map((tag) => (
+                    {['JavaScript', 'Vue', '.NET', 'AWS', "Rubik's Cube 🧩"].map((tag) => (
                       <span
                         key={tag}
                         className="px-3 py-1 text-xs rounded-full border border-white/20 text-white/70 font-body"

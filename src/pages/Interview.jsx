@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageTransition from '../components/PageTransition'
 import ApplyForm from '../components/interview/ApplyForm'
@@ -6,10 +6,7 @@ import ResourcesSection from '../components/interview/ResourcesSection'
 import QALibrary from '../components/interview/QALibrary'
 import CandidateManager from '../components/interview/CandidateManager'
 import QAManager from '../components/interview/QAManager'
-
-// Admin credentials are stored in Cognito — this is a local auth gate
-// Replace with Amplify Auth when backend is connected
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@anshulsharma.dev'
+import { supabase } from '../lib/supabaseClient'
 
 const SECTIONS = [
   { id: 'apply', label: '📋 Apply', public: true },
@@ -21,28 +18,42 @@ const SECTIONS = [
 
 function AdminLoginModal({ onLogin, onClose }) {
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [otp, setOtp] = useState('')
+  const [step, setStep] = useState('email') // 'email' | 'otp'
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e) => {
+  const handleSendOtp = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError('')
-    try {
-      // TODO: Replace with Amplify Auth signIn when backend wired
-      // For now, using a simple placeholder check
-      // signIn({ username: email, password }) from aws-amplify/auth
-      if (email === ADMIN_EMAIL && password.length >= 6) {
-        onLogin({ email, token: 'placeholder-admin-token' })
-      } else {
-        setError('Invalid credentials')
-      }
-    } catch {
-      setError('Login failed. Check credentials.')
-    } finally {
-      setLoading(false)
+    const { error: otpError } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false },
+    })
+    if (otpError) {
+      setError(otpError.message)
+    } else {
+      setStep('otp')
     }
+    setLoading(false)
+  }
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    const { data, error: verifyError } = await supabase.auth.verifyOtp({
+      email,
+      token: otp.trim(),
+      type: 'email',
+    })
+    if (verifyError || !data.session) {
+      setError(verifyError?.message || 'Invalid or expired code.')
+    } else {
+      onLogin({ email: data.user.email })
+    }
+    setLoading(false)
   }
 
   return (
@@ -62,35 +73,58 @@ function AdminLoginModal({ onLogin, onClose }) {
         onClick={(e) => e.stopPropagation()}
         style={{ border: '1px solid rgba(255,88,0,0.4)' }}
       >
-        <h3 className="font-display font-bold text-xl text-white mb-6">Admin Login</h3>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-white/50 text-xs mb-1 font-body">Email</label>
-            <input
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-white/50 text-xs mb-1 font-body">Password</label>
-            <input
-              type="password"
-              required
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
-            />
-          </div>
-          {error && <p className="text-red-400 text-sm font-body">{error}</p>}
-          <button type="submit" disabled={loading} className="btn-primary w-full">
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
+        <h3 className="font-display font-bold text-xl text-white mb-2">Admin Login</h3>
+        <p className="text-white/40 text-sm font-body mb-6">
+          {step === 'email' ? 'Enter your email to receive a one-time code.' : `Code sent to ${email}`}
+        </p>
+
+        {step === 'email' ? (
+          <form onSubmit={handleSendOtp} className="space-y-4">
+            <div>
+              <label className="block text-white/50 text-xs mb-1 font-body">Email</label>
+              <input
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
+              />
+            </div>
+            {error && <p className="text-red-400 text-sm font-body">{error}</p>}
+            <button type="submit" disabled={loading} className="btn-primary w-full">
+              {loading ? 'Sending…' : 'Send Code →'}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <div>
+              <label className="block text-white/50 text-xs mb-1 font-body">8-digit code from email</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={8}
+                required
+                autoFocus
+                placeholder="00000000"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-center tracking-widest text-lg focus:outline-none focus:border-[#FF5800] transition-colors font-body"
+              />
+            </div>
+            {error && <p className="text-red-400 text-sm font-body">{error}</p>}
+            <button type="submit" disabled={loading || otp.length < 6} className="btn-primary w-full">
+              {loading ? 'Verifying…' : 'Verify & Login →'}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setStep('email'); setOtp(''); setError('') }}
+              className="w-full text-white/40 text-sm font-body hover:text-white/60 transition-colors"
+            >
+              ← Resend / change email
+            </button>
+          </form>
+        )}
       </motion.div>
     </motion.div>
   )
@@ -101,13 +135,25 @@ export default function Interview() {
   const [showLogin, setShowLogin] = useState(false)
   const [activeSection, setActiveSection] = useState('apply')
 
+  // Restore existing session on mount (e.g. page refresh)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) setAdmin({ email: data.session.user.email })
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) { setAdmin(null); setActiveSection('apply') }
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
   const handleLogin = (adminData) => {
     setAdmin(adminData)
     setShowLogin(false)
     setActiveSection('candidates')
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
     setAdmin(null)
     setActiveSection('apply')
   }
@@ -172,7 +218,7 @@ export default function Interview() {
             transition={{ delay: 0.6 }}
             className="mt-5 text-white/50 text-base font-body max-w-2xl mx-auto leading-relaxed"
           >
-            Personalized mock interviews to help you crack Java, React, AWS, and more.
+            Personalized mock interviews to help you crack Vue, JavaScript, .NET, AWS, and more.
             Apply for a session, download free study material, or explore the Q&A library.
           </motion.p>
 
@@ -249,7 +295,7 @@ export default function Interview() {
             {activeSection === 'apply' && <ApplyForm />}
             {activeSection === 'resources' && <ResourcesSection />}
             {activeSection === 'qa' && admin && <QALibrary token={admin.token} />}
-            {activeSection === 'candidates' && admin && <CandidateManager token={admin.token} />}
+            {activeSection === 'candidates' && admin && <CandidateManager />}
             {activeSection === 'qamanager' && admin && <QAManager token={admin.token} />}
           </motion.div>
         </AnimatePresence>

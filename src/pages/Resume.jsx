@@ -1,7 +1,12 @@
 import PageTransition from '../components/PageTransition'
 
-// Replace RESUME_URL with your S3 presigned URL or Amplify Storage URL
-const RESUME_URL = 'https://your-s3-bucket.s3.amazonaws.com/resume/anshul-sharma-resume.pdf'
+// Set VITE_SUPABASE_STORAGE_URL in .env.local, then upload resume PDF to the
+// Supabase Storage bucket named "resume". The file will be served from:
+// {VITE_SUPABASE_STORAGE_URL}/resume/anshul-sharma-resume.pdf
+const storageBase = import.meta.env.VITE_SUPABASE_STORAGE_URL || ''
+const RESUME_URL = storageBase
+  ? `${storageBase}/resume/anshul-sharma-resume.pdf`
+  : ''
 
 export default function Resume() {
   return (

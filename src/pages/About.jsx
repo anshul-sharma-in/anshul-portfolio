@@ -19,16 +19,15 @@ export default function About() {
             >
               AS
             </div>
-            <p className="mt-3 text-center text-white/40 text-xs">← replace with your photo</p>
+            <p className="mt-3 text-center text-white/40 text-xs"></p>
           </div>
 
           {/* Bio */}
           <div className="flex-1 space-y-5 text-white/80 leading-relaxed font-body text-base">
             <p>
-              Hey there! I'm <span className="text-[#FF5800] font-semibold">Anshul Sharma</span> — a software developer
+              Hey there! I'm <span className="text-[#FF5800] font-semibold">Anshul Sharma</span> — a Senior Software Engineer
               with a passion for building clean, scalable, and impactful systems. I currently work on
-              backend-heavy applications with Java, Spring Boot, and AWS, and have a strong interest in
-              full-stack development.
+              full-stack and cloud-heavy applications with Vue, JavaScript, .NET, and AWS.
             </p>
             <p>
               When I'm not writing code, I'm solving Rubik's cubes — a hobby that taught me patience,
@@ -44,8 +43,8 @@ export default function About() {
             {/* Stats row */}
             <div className="grid grid-cols-3 gap-4 mt-8">
               {[
-                { label: 'Years Experience', value: '4+' },
-                { label: 'Projects Built', value: '20+' },
+                { label: 'Years Experience', value: '5+' },
+                { label: 'Projects Built', value: '10+' },
                 { label: 'Cubes Solved 🧩', value: '∞' },
               ].map((s) => (
                 <div key={s.label} className="glass-card text-center">
@@ -60,7 +59,7 @@ export default function About() {
             {/* Social links */}
             <div className="flex gap-3 mt-6 flex-wrap">
               <a
-                href="https://linkedin.com/in/anshulsharma"
+                href="https://www.linkedin.com/in/anshul-sharma-in/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-primary text-sm"
@@ -68,7 +67,7 @@ export default function About() {
                 LinkedIn Profile
               </a>
               <a
-                href="https://github.com/anshulsharma"
+                href="https://github.com/anshul-sharma-in"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-outline text-sm"

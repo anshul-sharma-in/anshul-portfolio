@@ -13,11 +13,13 @@
     "@aws-amplify/ui-react": "^6.15.3",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
+    "@supabase/supabase-js": "^2.103.0",
     "aws-amplify": "^6.16.3",
     "framer-motion": "^12.38.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.14.0",
+    "supabase": "^2.91.2",
     "three": "^0.183.2"
   },
   "devDependencies": {

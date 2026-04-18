@@ -3,9 +3,9 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 
 const SOCIALS = [
-  { label: 'LinkedIn', icon: '🔗', url: 'https://linkedin.com/in/anshulsharma', color: '#0A66C2', desc: 'Connect with me professionally' },
-  { label: 'GitHub', icon: '💻', url: 'https://github.com/anshulsharma', color: '#fff', desc: 'Check my code & projects' },
-  { label: 'Email', icon: '✉️', url: 'mailto:anshul@yourdomain.com', color: '#FF5800', desc: 'anshul@yourdomain.com' },
+  { label: 'LinkedIn', icon: '🔗', url: 'https://www.linkedin.com/in/anshul-sharma-in/', color: '#0A66C2', desc: 'Connect with me professionally' },
+  { label: 'GitHub', icon: '💻', url: 'https://github.com/anshul-sharma-in', color: '#fff', desc: 'Check my code & projects' },
+  { label: 'Email', icon: '✉️', url: 'mailto:anshulsharma155@gmail.com', color: '#FF5800', desc: 'anshulsharma155@gmail.com' },
 ]
 
 export default function Contact() {

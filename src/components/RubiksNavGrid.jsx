@@ -31,7 +31,7 @@ const BLOCKS = [
     emoji: '💻',
     color: '#1a1a1a',
     textColor: '#fff',
-    to: 'https://github.com/anshulsharma',
+    to: 'https://github.com/anshul-sharma-in',
     external: true,
     desc: 'my code',
   },
@@ -40,7 +40,7 @@ const BLOCKS = [
     emoji: '🔗',
     color: '#0A66C2',
     textColor: '#fff',
-    to: 'https://linkedin.com/in/anshulsharma',
+    to: 'https://www.linkedin.com/in/anshul-sharma-in/',
     external: true,
     desc: 'connect',
   },
@@ -61,21 +61,20 @@ const BLOCKS = [
     desc: 'get in touch',
   },
   {
-    label: 'Blog',
-    emoji: '📝',
+    label: 'Experience',
+    emoji: '🏢',
     color: '#e0e0e0',
     textColor: '#111',
-    to: '/blog',
-    desc: 'my articles',
+    to: '/experience',
+    desc: 'my journey',
   },
   {
     label: 'Interview',
     emoji: '🎯',
-    color: 'linear-gradient(135deg, #FF5800, #FFD500, #009E60, #0045AD)',
+    color: '#0D7377',
     textColor: '#fff',
     to: '/interview',
     desc: 'with Anshul',
-    isGradient: true,
     highlight: true,
   },
 ]
@@ -119,10 +118,10 @@ export default function RubiksNavGrid() {
           onClick={() => handleClick(block)}
           className="rubik-block aspect-square select-none"
           style={{
-            background: block.isGradient ? block.color : block.color,
+            background: block.color,
             color: block.textColor,
             boxShadow: block.highlight
-              ? '0 0 30px rgba(255,88,0,0.5), 0 0 60px rgba(0,158,96,0.3)'
+              ? '0 0 30px rgba(13,115,119,0.6), 0 0 60px rgba(13,115,119,0.25)'
               : undefined,
           }}
         >

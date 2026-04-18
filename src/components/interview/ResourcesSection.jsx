@@ -1,28 +1,31 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { supabase } from '../../lib/supabaseClient'
 
-const API_URL = import.meta.env.VITE_API_URL || ''
+const storageBase = import.meta.env.VITE_SUPABASE_STORAGE_URL
 
-const PLACEHOLDER_RESOURCES = [
-  { name: 'Java Interview Notes - Core Concepts', type: 'PDF', size: '1.2 MB', key: 'java-core-notes.pdf' },
-  { name: 'Advanced Java - Multithreading & Collections', type: 'PDF', size: '0.9 MB', key: 'java-advanced-notes.pdf' },
-  { name: 'JavaScript + React Interview Prep', type: 'PDF', size: '1.5 MB', key: 'js-react-notes.pdf' },
-  { name: 'SQL & Database Design Questions', type: 'PDF', size: '0.7 MB', key: 'database-qp.pdf' },
-  { name: 'Previous Interview Question Paper - 2025', type: 'PDF', size: '0.4 MB', key: 'qp-2025.pdf' },
-  { name: 'Previous Interview Question Paper - 2024', type: 'PDF', size: '0.3 MB', key: 'qp-2024.pdf' },
-]
+function publicUrl(fileName) {
+  return storageBase ? `${storageBase}/resources/${fileName}` : null
+}
+
+function fileTypeLabel(name) {
+  const ext = name.split('.').pop().toUpperCase()
+  return ['PDF', 'PPT', 'PPTX', 'DOC', 'DOCX'].includes(ext) ? ext : 'FILE'
+}
 
 export default function ResourcesSection() {
-  const [resources, setResources] = useState(PLACEHOLDER_RESOURCES)
-  const [loading, setLoading] = useState(false)
+  const [resources, setResources] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!API_URL) return
-    setLoading(true)
-    fetch(`${API_URL}/resources`)
-      .then((r) => r.json())
-      .then((data) => { if (Array.isArray(data)) setResources(data) })
-      .catch(() => {/* fall back to placeholder */})
+    supabase.storage
+      .from('resources')
+      .list('', { sortBy: { column: 'name', order: 'asc' } })
+      .then(({ data }) => {
+        if (data) {
+          setResources(data.filter((f) => f.name !== '.emptyFolderPlaceholder'))
+        }
+      })
       .finally(() => setLoading(false))
   }, [])
 
@@ -39,41 +42,57 @@ export default function ResourcesSection() {
         <div className="text-white/40 text-sm font-body">Loading resources...</div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {resources.map((r, i) => (
-            <motion.div
-              key={r.key}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.07 }}
-              className="glass-card flex flex-col gap-3 hover:border-white/30 transition-all duration-300 group"
-            >
-              <div className="flex items-start gap-3">
-                <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
-                  style={{ background: 'rgba(255,88,0,0.15)' }}
-                >
-                  📄
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white/90 text-sm font-semibold font-body leading-snug line-clamp-2 group-hover:text-[#FF5800] transition-colors">
-                    {r.name}
-                  </p>
-                  <p className="text-white/30 text-xs mt-0.5">{r.type} · {r.size}</p>
-                </div>
-              </div>
-
-              <a
-                href={r.url || '#'}
-                download
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-outline text-xs py-1.5 text-center mt-auto"
-                onClick={(e) => { if (!r.url) { e.preventDefault(); alert('Upload resources to S3 first — see ResourcesSection.jsx') } }}
+          {resources.length === 0 ? (
+            <div className="col-span-full text-center py-8 text-white/30 font-body">
+              <div className="text-3xl mb-2">📭</div>
+              <p className="text-sm">No resources uploaded yet. Check back soon!</p>
+            </div>
+          ) : resources.map((r, i) => {
+            const url = publicUrl(r.name)
+            return (
+              <motion.div
+                key={r.name}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.07 }}
+                className="glass-card flex flex-col gap-3 hover:border-white/30 transition-all duration-300 group"
               >
-                ⬇ Download
-              </a>
-            </motion.div>
-          ))}
+                <div className="flex items-start gap-3">
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
+                    style={{ background: 'rgba(255,88,0,0.15)' }}
+                  >
+                    📄
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white/90 text-sm font-semibold font-body leading-snug line-clamp-2 group-hover:text-[#FF5800] transition-colors">
+                      {r.name}
+                    </p>
+                    <p className="text-white/30 text-xs mt-0.5">
+                      {fileTypeLabel(r.name)}
+                      {r.metadata?.size ? ` · ${(r.metadata.size / 1024).toFixed(0)} KB` : ''}
+                    </p>
+                  </div>
+                </div>
+
+                {url ? (
+                  <a
+                    href={url}
+                    download
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-outline text-xs py-1.5 text-center mt-auto"
+                  >
+                    ⬇ Download
+                  </a>
+                ) : (
+                  <span className="btn-outline text-xs py-1.5 text-center mt-auto opacity-40 cursor-not-allowed">
+                    ⬇ Download
+                  </span>
+                )}
+              </motion.div>
+            )
+          })}
         </div>
       )}
     </div>

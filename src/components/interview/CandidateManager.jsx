@@ -1,187 +1,251 @@
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { supabase } from '../../lib/supabaseClient'
 
-const API_URL = import.meta.env.VITE_API_URL || ''
+const STATUS_COLORS = {
+  pending: 'text-yellow-300',
+  approved: 'text-green-400',
+  time_suggested: 'text-blue-300',
+}
 
-const EMPTY_FORM = { name: '', email: '', phone: '', interviewDate: '', score: '', feedback: '' }
+const STATUS_LABELS = {
+  pending: 'Pending',
+  approved: 'Approved ✅',
+  time_suggested: 'Time Suggested 📅',
+}
 
-export default function CandidateManager({ token }) {
-  const [candidates, setCandidates] = useState([])
+function SuggestTimeModal({ applicant, onClose, onConfirm }) {
+  const [datetime, setDatetime] = useState('')
+  const [note, setNote] = useState('')
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="w-full max-w-md bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 space-y-4"
+      >
+        <h3 className="text-white font-display font-bold text-lg">Suggest Interview Time</h3>
+        <p className="text-white/50 text-sm font-body">For: {applicant.name} ({applicant.email})</p>
+        <div>
+          <label className="block text-white/50 text-xs mb-1 font-body uppercase tracking-wider">Date & Time</label>
+          <input
+            type="datetime-local"
+            value={datetime}
+            onChange={(e) => setDatetime(e.target.value)}
+            className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-white/50 text-xs mb-1 font-body uppercase tracking-wider">Note (optional)</label>
+          <input
+            type="text"
+            maxLength={200}
+            placeholder="e.g. Google Meet link, platform…"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/20 focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
+          />
+        </div>
+        <div className="flex gap-3 pt-1">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 rounded-lg border border-white/20 text-white/60 text-sm font-body hover:bg-white/5 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            disabled={!datetime}
+            onClick={() => onConfirm(datetime, note)}
+            className="flex-1 py-2 rounded-lg text-white text-sm font-semibold transition-colors"
+            style={{ background: datetime ? '#FF5800' : '#333' }}
+          >
+            Confirm & Notify
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+export default function CandidateManager() {
   const [applications, setApplications] = useState([])
-  const [activeTab, setActiveTab] = useState('applications')
-  const [editItem, setEditItem] = useState(null)
-  const [form, setForm] = useState(EMPTY_FORM)
-  const [saving, setSaving] = useState(false)
-  const [msg, setMsg] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [actionLoading, setActionLoading] = useState(null)
+  const [suggestTarget, setSuggestTarget] = useState(null)
+  const [expandedId, setExpandedId] = useState(null)
 
-  const authHeaders = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+  const fetchApplications = useCallback(async () => {
+    setLoading(true)
+    const { data, error: err } = await supabase
+      .from('applications')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (err) setError(err.message)
+    else setApplications((data ?? []).filter(a => a.status !== 'rejected'))
+    setLoading(false)
+  }, [])
 
-  useEffect(() => {
-    if (!token) return
-    fetchApplications()
-    fetchCandidates()
-  }, [token])
+  useEffect(() => { fetchApplications() }, [fetchApplications])
 
-  const fetchApplications = async () => {
-    try {
-      const r = await fetch(`${API_URL}/apply`, { headers: authHeaders })
-      const d = await r.json()
-      if (Array.isArray(d)) setApplications(d)
-    } catch {}
+  const sendStatusEmail = (applicant, newStatus, suggestedTime = '') => {
+    supabase.functions.invoke('notify-applicant', {
+      body: {
+        to_email: applicant.email,
+        applicant_name: applicant.name,
+        new_status: newStatus,
+        suggested_time: suggestedTime,
+      },
+    }).catch(() => {})
   }
 
-  const fetchCandidates = async () => {
-    try {
-      const r = await fetch(`${API_URL}/candidates`, { headers: authHeaders })
-      const d = await r.json()
-      if (Array.isArray(d)) setCandidates(d)
-    } catch {}
-  }
-
-  const handleSave = async (e) => {
-    e.preventDefault()
-    setSaving(true)
-    setMsg('')
-    try {
-      const method = editItem?.id ? 'PUT' : 'POST'
-      const url = editItem?.id ? `${API_URL}/candidates/${editItem.id}` : `${API_URL}/candidates`
-      const r = await fetch(url, { method, headers: authHeaders, body: JSON.stringify(form) })
-      if (!r.ok) throw new Error()
-      setMsg('Saved! Email will be sent to candidate.')
-      setEditItem(null)
-      setForm(EMPTY_FORM)
-      fetchCandidates()
-    } catch {
-      setMsg('Error saving. Check API connection.')
-    } finally {
-      setSaving(false)
+  const updateStatus = async (row, newStatus, extra = {}) => {
+    setActionLoading(row.id)
+    const { error: updateError } = await supabase
+      .from('applications')
+      .update({ status: newStatus, ...extra })
+      .eq('id', row.id)
+    if (!updateError) {
+      sendStatusEmail(row, newStatus, extra.suggested_time || '')
+      setApplications((prev) =>
+        prev.map((a) => a.id === row.id ? { ...a, status: newStatus, ...extra } : a)
+      )
     }
+    setActionLoading(null)
+  }
+
+  const handleSuggestConfirm = async (datetime, note) => {
+    const formatted = new Date(datetime).toLocaleString('en-IN', {
+      dateStyle: 'medium', timeStyle: 'short',
+    }) + (note ? ` — ${note}` : '')
+    await updateStatus(suggestTarget, 'time_suggested', { suggested_time: formatted })
+    setSuggestTarget(null)
+  }
+
+  if (loading) {
+    return <div className="text-white/40 text-sm font-body py-6">Loading applications…</div>
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-2">
+        <p className="text-red-400 text-sm font-body">Failed to load: {error}</p>
+        <p className="text-white/30 text-xs font-body">Check Supabase RLS policies — authenticated users need SELECT access.</p>
+      </div>
+    )
   }
 
   return (
-    <div>
-      <h3 className="font-display font-bold text-xl text-white mb-6">Candidate Management</h3>
+    <>
+      <AnimatePresence>
+        {suggestTarget && (
+          <SuggestTimeModal
+            applicant={suggestTarget}
+            onClose={() => setSuggestTarget(null)}
+            onConfirm={handleSuggestConfirm}
+          />
+        )}
+      </AnimatePresence>
 
-      {/* Tab switcher */}
-      <div className="flex gap-2 mb-6">
-        {['applications', 'results'].map((t) => (
-          <button
-            key={t}
-            onClick={() => setActiveTab(t)}
-            className="px-4 py-1.5 rounded-full text-sm font-body font-semibold transition-all duration-200 capitalize"
-            style={{
-              background: activeTab === t ? '#009E60' : 'rgba(255,255,255,0.07)',
-              color: activeTab === t ? '#fff' : 'rgba(255,255,255,0.6)',
-              border: activeTab === t ? '1px solid #009E60' : '1px solid rgba(255,255,255,0.1)',
-            }}
-          >
-            {t === 'applications' ? `📥 Applications (${applications.length})` : `📊 Results (${candidates.length})`}
-          </button>
-        ))}
-      </div>
+      <div>
+        <h3 className="font-display font-bold text-xl text-white mb-2">Candidate Management</h3>
+        <p className="text-white/40 text-sm font-body mb-6">
+          {applications.length} application{applications.length !== 1 ? 's' : ''} · Click a row to expand message
+        </p>
 
-      {activeTab === 'applications' && (
-        <div className="space-y-3">
-          {applications.length === 0 ? (
-            <p className="text-white/30 text-sm">No applications yet. Populate VITE_API_URL in .env.</p>
-          ) : (
-            applications.map((a) => (
-              <div key={a.id} className="glass-card border border-white/10">
-                <div className="flex flex-wrap justify-between gap-2">
-                  <div>
+        {applications.length === 0 ? (
+          <div className="text-center py-12 text-white/30 font-body">
+            <div className="text-4xl mb-3">📭</div>
+            <p>No applications yet.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {applications.map((a) => (
+              <motion.div
+                key={a.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-xl border border-white/10 bg-white/3 overflow-hidden"
+              >
+                {/* Main row */}
+                <div
+                  className="flex flex-wrap items-start gap-3 px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
+                  onClick={() => setExpandedId(expandedId === a.id ? null : a.id)}
+                >
+                  <div className="flex-1 min-w-0">
                     <p className="font-semibold text-white font-body">{a.name}</p>
-                    <p className="text-white/50 text-xs">{a.email} · {a.phone} · {a.experience} exp</p>
-                    {a.message && <p className="text-white/40 text-xs mt-1">"{a.message}"</p>}
+                    <p className="text-white/50 text-xs">
+                      {a.email}
+                      {a.phone ? ` · ${a.phone}` : ''}
+                      {a.experience ? ` · ${a.experience} exp` : ''}
+                    </p>
+                    {a.suggested_time && (
+                      <p className="text-blue-300/80 text-xs mt-1">🕐 {a.suggested_time}</p>
+                    )}
                   </div>
-                  <div className="text-right">
-                    <p className="text-white/30 text-xs">{new Date(a.appliedAt).toLocaleDateString()}</p>
-                    <button
-                      onClick={() => { setActiveTab('results'); setForm({ ...EMPTY_FORM, name: a.name, email: a.email, phone: a.phone || '' }); setEditItem({}) }}
-                      className="mt-2 btn-primary text-xs px-3 py-1"
-                    >
-                      Enter Result →
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      )}
 
-      {activeTab === 'results' && (
-        <div className="space-y-6">
-          {/* Enter/Edit result form */}
-          <form onSubmit={handleSave} className="glass-card space-y-4">
-            <h4 className="font-display font-bold text-white/80 text-sm">
-              {editItem?.id ? 'Edit Result' : 'Enter New Result'}
-            </h4>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {[
-                { key: 'name', label: 'Candidate Name', type: 'text' },
-                { key: 'email', label: 'Email', type: 'email' },
-                { key: 'phone', label: 'Phone', type: 'tel' },
-                { key: 'interviewDate', label: 'Interview Date', type: 'date' },
-                { key: 'score', label: 'Score (e.g. 78/100)', type: 'text' },
-              ].map((f) => (
-                <div key={f.key}>
-                  <label className="block text-white/50 text-xs mb-1 font-body">{f.label}</label>
-                  <input
-                    type={f.type}
-                    required={['name', 'email', 'score'].includes(f.key)}
-                    maxLength={200}
-                    value={form[f.key]}
-                    onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#009E60] transition-colors font-body"
-                  />
-                </div>
-              ))}
-            </div>
-            <div>
-              <label className="block text-white/50 text-xs mb-1 font-body">Feedback / Notes</label>
-              <textarea
-                rows={4}
-                maxLength={2000}
-                value={form.feedback}
-                onChange={(e) => setForm({ ...form, feedback: e.target.value })}
-                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-[#009E60] transition-colors font-body resize-none"
-                placeholder="Detailed feedback to be emailed to candidate..."
-              />
-            </div>
-            {msg && <p className={`text-sm font-body ${msg.startsWith('Error') ? 'text-red-400' : 'text-green-400'}`}>{msg}</p>}
-            <button type="submit" disabled={saving} className="btn-primary w-full text-sm">
-              {saving ? 'Saving & Sending Email...' : 'Save Result & Email Candidate 📧'}
-            </button>
-          </form>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="text-right">
+                      <p className="text-white/30 text-xs">
+                        {new Date(a.created_at).toLocaleDateString('en-IN')}
+                      </p>
+                      <p className={`text-xs font-semibold mt-0.5 ${STATUS_COLORS[a.status] || 'text-white/50'}`}>
+                        {STATUS_LABELS[a.status] || a.status}
+                      </p>
+                    </div>
 
-          {/* Results list */}
-          {candidates.length > 0 && (
-            <div className="space-y-3">
-              <h4 className="text-white/50 text-sm font-display">Recorded Results</h4>
-              {candidates.map((c) => (
-                <div key={c.id} className="glass-card flex flex-wrap justify-between gap-3 items-start">
-                  <div>
-                    <p className="font-semibold text-white font-body">{c.name}</p>
-                    <p className="text-white/50 text-xs">{c.email}</p>
-                    <p className="text-[#FFD500] font-bold text-sm mt-1">Score: {c.score}</p>
-                    {c.feedback && <p className="text-white/40 text-xs mt-1 line-clamp-2">{c.feedback}</p>}
-                  </div>
-                  <div className="text-right">
-                    <p className="text-white/30 text-xs">{c.interviewDate}</p>
-                    <p className="text-green-400 text-xs mt-1">📧 Email sent: {c.resultSentAt ? new Date(c.resultSentAt).toLocaleDateString() : 'pending'}</p>
-                    <button
-                      onClick={() => { setEditItem(c); setForm({ name: c.name, email: c.email, phone: c.phone || '', interviewDate: c.interviewDate || '', score: c.score || '', feedback: c.feedback || '' }) }}
-                      className="mt-2 btn-outline text-xs px-3 py-1"
-                    >
-                      Edit
-                    </button>
+                    {/* Action buttons */}
+                    <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        disabled={actionLoading === a.id || a.status === 'approved'}
+                        onClick={() => updateStatus(a, 'approved')}
+                        title="Approve"
+                        className="px-2.5 py-1.5 rounded-lg text-xs bg-green-500/20 text-green-300 hover:bg-green-500/40 disabled:opacity-30 transition-colors"
+                      >
+                        ✓
+                      </button>
+                      <button
+                        disabled={actionLoading === a.id}
+                        onClick={() => setSuggestTarget(a)}
+                        title="Propose new time"
+                        className="px-2.5 py-1.5 rounded-lg text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 disabled:opacity-30 transition-colors"
+                      >
+                        📅
+                      </button>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+
+                {/* Expanded message */}
+                <AnimatePresence>
+                  {expandedId === a.id && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden border-t border-white/5 px-4 py-3 bg-white/3"
+                    >
+                      <p className="text-white/40 text-xs uppercase tracking-wider mb-1 font-body">Message</p>
+                      <p className="text-white/75 text-sm font-body whitespace-pre-wrap">
+                        {a.message || <em className="text-white/25">No message provided</em>}
+                      </p>
+                      {a.preferred_time && (
+                        <div className="mt-3">
+                          <p className="text-white/40 text-xs uppercase tracking-wider mb-1 font-body">Preferred Interview Time</p>
+                          <p className="text-[#FFD500]/80 text-sm font-body">
+                            📅 {new Date(a.preferred_time).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                          </p>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
   )
 }

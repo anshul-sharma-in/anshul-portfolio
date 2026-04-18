@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-
-const API_URL = import.meta.env.VITE_API_URL || ''
+import { supabase } from '../../lib/supabaseClient'
 
 export default function ApplyForm() {
   const [form, setForm] = useState({
@@ -11,6 +10,7 @@ export default function ApplyForm() {
     experience: '',
     message: '',
   })
+  const [preferredTime, setPreferredTime] = useState('')
   const [status, setStatus] = useState('idle') // idle | loading | success | error
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
@@ -19,12 +19,30 @@ export default function ApplyForm() {
     e.preventDefault()
     setStatus('loading')
     try {
-      const res = await fetch(`${API_URL}/apply`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      })
-      if (!res.ok) throw new Error('Server error')
+      const { error } = await supabase.from('applications').insert([
+        {
+          name: form.name.trim(),
+          email: form.email.trim().toLowerCase(),
+          phone: form.phone.trim(),
+          experience: form.experience,
+          message: form.message.trim(),
+          preferred_time: preferredTime || null,
+        },
+      ])
+      if (error) throw error
+
+      // Notify admin via email (best-effort — don't block on failure)
+      supabase.functions.invoke('notify-admin', {
+        body: {
+          applicant_name: form.name,
+          applicant_email: form.email,
+          applicant_phone: form.phone || 'Not provided',
+          applicant_experience: form.experience || 'Not specified',
+          applicant_message: form.message || 'No message',
+          preferred_time: preferredTime || null,
+        },
+      }).catch(() => {/* silent — DB insert already succeeded */})
+
       setStatus('success')
     } catch {
       setStatus('error')
@@ -118,11 +136,26 @@ export default function ApplyForm() {
             name="message"
             rows={4}
             maxLength={1000}
-            placeholder="Tell me your goals, which tech you want to practice (Java, React, DSA...), etc."
+            placeholder="Tell me your goals, which tech you want to practice (Vue, JavaScript, .NET, DSA...), etc."
             value={form.message}
             onChange={handleChange}
             className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm resize-none"
           />
+        </div>
+
+        <div>
+          <label className="block text-white/60 text-sm mb-1 font-body">
+            Preferred Interview Date &amp; Time{' '}
+            <span className="text-white/30 font-normal">(optional)</span>
+          </label>
+          <input
+            type="datetime-local"
+            value={preferredTime}
+            min={new Date().toISOString().slice(0, 16)}
+            onChange={(e) => setPreferredTime(e.target.value)}
+            className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
+          />
+          <p className="text-white/30 text-xs mt-1 font-body">Helps schedule faster — you can always discuss availability later</p>
         </div>
 
         {status === 'error' && (

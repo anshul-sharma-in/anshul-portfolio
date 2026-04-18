@@ -3,36 +3,29 @@ import { motion } from 'framer-motion'
 
 const PROJECTS = [
   {
-    title: 'Project Alpha',
-    desc: 'A high-performance REST API system built with Spring Boot, handling 10k+ requests/sec with DynamoDB persistence.',
-    tech: ['Java', 'Spring Boot', 'AWS DynamoDB', 'Docker'],
-    github: 'https://github.com/anshulsharma/project-alpha',
-    live: null,
+    title: 'Grandfather Stories',
+    desc: 'A collection of stories told by my grandfather, brought to life with text-to-speech narration. Users click play and hear each story in the same voice, regardless of their browser.',
+    tech: ['Vue.js', 'Python', 'Text-to-Speech API'],
+    github: 'https://github.com/anshul-sharma-in/grandfather-stories',
+    githubBackend: 'https://github.com/anshul-sharma-in/speaker-backend',
+    live: 'https://stories.anshulsharma.net/',
     color: '#FF5800',
   },
   {
     title: 'Portfolio Website',
-    desc: 'This very website! Built with React, Three.js, Framer Motion, and hosted on AWS Amplify with Rubik\'s cube themed navigation.',
+    desc: "This very website! Built with React, Three.js, Framer Motion, and hosted on AWS Amplify with a Rubik's cube themed navigation grid.",
     tech: ['React', 'Three.js', 'Tailwind CSS', 'AWS Amplify'],
-    github: 'https://github.com/anshulsharma/portfolio',
-    live: 'https://anshulsharma.dev',
+    github: 'https://github.com/anshul-sharma-in/anshul-portfolio',
+    live: null,
     color: '#0045AD',
   },
   {
     title: 'Interview Platform',
-    desc: 'A mock interview scheduling and Q&A management platform with admin dashboard, email notifications via SES, and categorized Q&A library.',
+    desc: 'A mock interview scheduling and Q&A management platform with admin dashboard, email notifications via SES, and a categorized Q&A library.',
     tech: ['React', 'Node.js', 'AWS Lambda', 'DynamoDB', 'SES'],
-    github: 'https://github.com/anshulsharma/interview-platform',
+    github: 'https://github.com/anshul-sharma-in/interview-platform',
     live: null,
     color: '#009E60',
-  },
-  {
-    title: 'Add Your Projects',
-    desc: 'Update this file with your real project details in src/pages/Projects.jsx',
-    tech: ['...'],
-    github: null,
-    live: null,
-    color: '#FFD500',
   },
 ]
 
@@ -73,6 +66,11 @@ export default function Projects() {
                 {p.github && (
                   <a href={p.github} target="_blank" rel="noopener noreferrer" className="btn-outline text-xs px-4 py-2">
                     GitHub
+                  </a>
+                )}
+                {p.githubBackend && (
+                  <a href={p.githubBackend} target="_blank" rel="noopener noreferrer" className="btn-outline text-xs px-4 py-2">
+                    GitHub (Backend)
                   </a>
                 )}
                 {p.live && (
