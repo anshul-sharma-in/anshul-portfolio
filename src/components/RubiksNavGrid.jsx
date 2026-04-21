@@ -19,14 +19,6 @@ const BLOCKS = [
     desc: 'What I built',
   },
   {
-    label: 'Resume',
-    emoji: '📄',
-    color: '#C41E3A',
-    textColor: '#fff',
-    to: '/resume',
-    desc: 'download CV',
-  },
-  {
     label: 'GitHub',
     emoji: '💻',
     color: '#1a1a1a',

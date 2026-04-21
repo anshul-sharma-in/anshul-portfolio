@@ -62,7 +62,7 @@ function AdminLoginModal({ onLogin, onClose }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.85)' }}
+        style={{ background: 'var(--modal-overlay)' }}
       onClick={onClose}
     >
       <motion.div
@@ -73,22 +73,22 @@ function AdminLoginModal({ onLogin, onClose }) {
         onClick={(e) => e.stopPropagation()}
         style={{ border: '1px solid rgba(255,88,0,0.4)' }}
       >
-        <h3 className="font-display font-bold text-xl text-white mb-2">Admin Login</h3>
-        <p className="text-white/40 text-sm font-body mb-6">
+        <h3 className="font-display font-bold text-xl text-gray-900 dark:text-white mb-2">Admin Login</h3>
+        <p className="text-gray-400 dark:text-white/40 text-sm font-body mb-6">
           {step === 'email' ? 'Enter your email to receive a one-time code.' : `Code sent to ${email}`}
         </p>
 
         {step === 'email' ? (
           <form onSubmit={handleSendOtp} className="space-y-4">
             <div>
-              <label className="block text-white/50 text-xs mb-1 font-body">Email</label>
+              <label className="block text-gray-500 dark:text-white/50 text-xs mb-1 font-body">Email</label>
               <input
                 type="email"
                 required
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
+                className="w-full px-4 py-2.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
               />
             </div>
             {error && <p className="text-red-400 text-sm font-body">{error}</p>}
@@ -99,7 +99,7 @@ function AdminLoginModal({ onLogin, onClose }) {
         ) : (
           <form onSubmit={handleVerifyOtp} className="space-y-4">
             <div>
-              <label className="block text-white/50 text-xs mb-1 font-body">8-digit code from email</label>
+              <label className="block text-gray-500 dark:text-white/50 text-xs mb-1 font-body">8-digit code from email</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -109,7 +109,7 @@ function AdminLoginModal({ onLogin, onClose }) {
                 placeholder="00000000"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-center tracking-widest text-lg focus:outline-none focus:border-[#FF5800] transition-colors font-body"
+                className="w-full px-4 py-2.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-center tracking-widest text-lg focus:outline-none focus:border-[#FF5800] transition-colors font-body"
               />
             </div>
             {error && <p className="text-red-400 text-sm font-body">{error}</p>}
@@ -119,7 +119,7 @@ function AdminLoginModal({ onLogin, onClose }) {
             <button
               type="button"
               onClick={() => { setStep('email'); setOtp(''); setError('') }}
-              className="w-full text-white/40 text-sm font-body hover:text-white/60 transition-colors"
+              className="w-full text-gray-400 dark:text-white/40 text-sm font-body hover:text-gray-600 dark:hover:text-white/60 transition-colors"
             >
               ← Resend / change email
             </button>
@@ -166,7 +166,7 @@ export default function Interview() {
       <div
         className="relative overflow-hidden"
         style={{
-          background: 'radial-gradient(ellipse at top, #0a0500 0%, #0a0a0a 60%)',
+          background: 'var(--interview-hero-bg)',
           borderBottom: '1px solid rgba(255,88,0,0.15)',
         }}
       >
@@ -197,7 +197,7 @@ export default function Interview() {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2, type: 'spring', stiffness: 150 }}
-            className="font-body font-light text-white/60 text-2xl md:text-3xl tracking-[0.3em] uppercase mb-1"
+            className="font-body font-light text-gray-500 dark:text-white/60 text-2xl md:text-3xl tracking-[0.3em] uppercase mb-1"
           >
             Interview
           </motion.h1>
@@ -206,7 +206,7 @@ export default function Interview() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35, type: 'spring' }}
-            className="font-stylish font-black text-5xl md:text-7xl text-white"
+            className="font-stylish font-black text-5xl md:text-7xl text-gray-900 dark:text-white"
             style={{ textShadow: '0 0 60px rgba(255,88,0,0.4)' }}
           >
             Anshul Sharma
@@ -216,7 +216,7 @@ export default function Interview() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="mt-5 text-white/50 text-base font-body max-w-2xl mx-auto leading-relaxed"
+            className="mt-5 text-gray-500 dark:text-white/50 text-base font-body max-w-2xl mx-auto leading-relaxed"
           >
             Personalized mock interviews to help you crack Vue, JavaScript, .NET, AWS, and more.
             Apply for a session, download free study material, or explore the Q&A library.
@@ -243,7 +243,7 @@ export default function Interview() {
           >
             {admin ? (
               <div className="flex items-center gap-3">
-                <span className="text-white/40 text-xs font-body">Admin: {admin.email}</span>
+                <span className="text-gray-400 dark:text-white/40 text-xs font-body">Admin: {admin.email}</span>
                 <button onClick={handleLogout} className="text-xs text-red-400 hover:text-red-300 font-body underline">
                   Logout
                 </button>
@@ -251,7 +251,7 @@ export default function Interview() {
             ) : (
               <button
                 onClick={() => setShowLogin(true)}
-                className="text-white/20 hover:text-white/50 text-xs font-body transition-colors"
+                className="text-gray-300 dark:text-white/20 hover:text-gray-500 dark:hover:text-white/50 text-xs font-body transition-colors"
               >
                 Admin Login
               </button>
@@ -261,7 +261,7 @@ export default function Interview() {
       </div>
 
       {/* Navigation tabs */}
-      <div className="sticky top-0 z-40 border-b border-white/10" style={{ background: 'rgba(10,10,10,0.95)', backdropFilter: 'blur(12px)' }}>
+      <div className="sticky z-40 border-b" style={{ top: 'var(--navbar-height)', background: 'var(--tabs-bg)', backdropFilter: 'blur(12px)', borderColor: 'var(--tabs-border)' }}>
         <div className="max-w-5xl mx-auto px-4 flex overflow-x-auto hide-scrollbar">
           {visibleSections.map((s) => (
             <button
@@ -270,7 +270,7 @@ export default function Interview() {
               className="flex-shrink-0 px-5 py-4 text-sm font-body font-semibold transition-all duration-200 border-b-2"
               style={{
                 borderColor: activeSection === s.id ? '#FF5800' : 'transparent',
-                color: activeSection === s.id ? '#FF5800' : 'rgba(255,255,255,0.45)',
+                color: activeSection === s.id ? '#FF5800' : 'var(--tab-inactive-color)',
               }}
             >
               {s.label}

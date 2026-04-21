@@ -10,20 +10,20 @@ export default function About() {
           {/* Photo */}
           <div className="flex-shrink-0">
             <div
-              className="w-48 h-48 rounded-2xl flex items-center justify-center text-5xl font-bold text-white/30 font-display"
+              className="w-48 h-48 rounded-2xl flex items-center justify-center text-5xl font-bold text-gray-300 dark:text-white/30 font-display"
               style={{
-                background: 'linear-gradient(135deg, #1a0500, #0a1a0a)',
+                background: 'var(--avatar-bg)',
                 border: '3px solid #FF5800',
                 boxShadow: '0 0 40px rgba(255,88,0,0.3)',
               }}
             >
               AS
             </div>
-            <p className="mt-3 text-center text-white/40 text-xs"></p>
+            <p className="mt-3 text-center text-gray-400 dark:text-white/40 text-xs"></p>
           </div>
 
           {/* Bio */}
-          <div className="flex-1 space-y-5 text-white/80 leading-relaxed font-body text-base">
+          <div className="flex-1 space-y-5 text-gray-700 dark:text-white/80 leading-relaxed font-body text-base">
             <p>
               Hey there! I'm <span className="text-[#FF5800] font-semibold">Anshul Sharma</span> — a Senior Software Engineer
               with a passion for building clean, scalable, and impactful systems. I currently work on
@@ -51,7 +51,7 @@ export default function About() {
                   <div className="text-3xl font-black font-display" style={{ color: '#FF5800' }}>
                     {s.value}
                   </div>
-                  <div className="text-xs text-white/50 mt-1 font-body">{s.label}</div>
+                  <div className="text-xs text-gray-500 dark:text-white/50 mt-1 font-body">{s.label}</div>
                 </div>
               ))}
             </div>

@@ -4,12 +4,64 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Design tokens — light (default) / dark (fun mode) ──────────────────── */
+:root {
+  --navbar-height: 64px;
+  --bg-page: #f9fafb;
+  --bg-card: #ffffff;
+  --bg-input: #f3f4f6;
+  --bg-input-border: #e5e7eb;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --text-subtle: #d1d5db;
+  --border-primary: #e5e7eb;
+  --border-hover: #d1d5db;
+  --avatar-bg: linear-gradient(135deg, #fef3e2, #e8f4ee);
+  --iframe-bg: #f3f4f6;
+  --modal-overlay: rgba(0, 0, 0, 0.5);
+  --modal-panel: #ffffff;
+  --interview-hero-bg: linear-gradient(160deg, #fff7f0 0%, #f9fafb 60%);
+  --tabs-bg: rgba(249, 250, 251, 0.95);
+  --tabs-border: #e5e7eb;
+  --scrollbar-track: #f3f4f6;
+  --tab-inactive-color: #6b7280;
+}
+
+html.dark {
+  --navbar-height: 0px;
+  --bg-page: #0a0a0a;
+  --bg-card: rgba(255, 255, 255, 0.05);
+  --bg-input: rgba(255, 255, 255, 0.05);
+  --bg-input-border: rgba(255, 255, 255, 0.1);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-muted: rgba(255, 255, 255, 0.4);
+  --text-subtle: rgba(255, 255, 255, 0.2);
+  --border-primary: rgba(255, 255, 255, 0.1);
+  --border-hover: rgba(255, 255, 255, 0.2);
+  --avatar-bg: linear-gradient(135deg, #1a0500, #0a1a0a);
+  --iframe-bg: #1a1a1a;
+  --modal-overlay: rgba(0, 0, 0, 0.85);
+  --modal-panel: #1a1a1a;
+  --interview-hero-bg: radial-gradient(ellipse at top, #0a0500 0%, #0a0a0a 60%);
+  --tabs-bg: rgba(10, 10, 10, 0.95);
+  --tabs-border: rgba(255, 255, 255, 0.1);
+  --scrollbar-track: #0a0a0a;
+  --tab-inactive-color: rgba(255, 255, 255, 0.45);
+}
+
 @layer base {
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
-  body { background-color: #0a0a0a; color: #ffffff; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+  body {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
   ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: #0a0a0a; }
+  ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
   ::-webkit-scrollbar-thumb { background: linear-gradient(#FF5800, #FFD500); border-radius: 3px; }
 }
 
@@ -23,7 +75,13 @@
     box-shadow: 0 8px 30px rgba(0,0,0,0.4), 0 0 0 3px rgba(255,255,255,0.2), inset 0 1px 0 rgba(255,255,255,0.3);
   }
   .rubik-block:active { transform: scale(0.97); }
-  .page-wrapper { @apply min-h-screen bg-[#0a0a0a] text-white; }
+
+  .page-wrapper {
+    min-height: 100vh;
+    background: var(--bg-page);
+    color: var(--text-primary);
+  }
+
   .section-title {
     @apply font-display text-3xl md:text-4xl font-bold mb-8;
     background: linear-gradient(135deg, #FF5800, #FFD500);
@@ -31,7 +89,19 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  .glass-card { @apply rounded-xl p-6 backdrop-blur-sm border border-white/10; background: rgba(255,255,255,0.05); }
+
+  .glass-card {
+    @apply rounded-xl p-6;
+    background: var(--bg-card);
+    border: 1px solid var(--border-primary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  }
+  html.dark .glass-card {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    box-shadow: none;
+  }
+
   .btn-primary {
     @apply px-6 py-3 rounded-lg font-semibold text-white transition-all duration-300 cursor-pointer;
     background: linear-gradient(135deg, #FF5800, #FFD500);

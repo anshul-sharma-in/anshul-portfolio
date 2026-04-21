@@ -5,9 +5,11 @@ import { supabase } from '../lib/supabaseClient'
 // ─── helpers ────────────────────────────────────────────────────────────────
 
 const STATUS_LABELS = {
-  pending: { label: 'Pending', bg: 'bg-yellow-500/20', text: 'text-yellow-300' },
-  approved: { label: 'Approved', bg: 'bg-green-500/20', text: 'text-green-300' },
-  time_suggested: { label: 'Time Suggested', bg: 'bg-blue-500/20', text: 'text-blue-300' },
+  pending: { label: 'Pending', bg: 'bg-yellow-500/20', text: 'text-yellow-600 dark:text-yellow-300' },
+  approved: { label: 'Approved', bg: 'bg-green-500/20', text: 'text-green-600 dark:text-green-300' },
+  time_suggested: { label: 'Time Suggested', bg: 'bg-blue-500/20', text: 'text-blue-600 dark:text-blue-300' },
+  scheduled: { label: 'Scheduled', bg: 'bg-purple-500/20', text: 'text-purple-600 dark:text-purple-300' },
+  completed: { label: 'Completed', bg: 'bg-gray-500/20', text: 'text-gray-500 dark:text-gray-400' },
 }
 
 function StatusBadge({ status }) {
@@ -62,16 +64,16 @@ function LoginScreen({ onLogin }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d] flex items-center justify-center px-4">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm bg-white/5 border border-white/10 rounded-2xl p-8"
+        className="w-full max-w-sm bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-8"
       >
         <div className="text-center mb-8">
           <div className="text-4xl mb-3">🔐</div>
-          <h1 className="text-white font-display font-bold text-xl">Admin Access</h1>
-          <p className="text-white/40 text-sm mt-1 font-body">
+          <h1 className="text-gray-900 dark:text-white font-display font-bold text-xl">Admin Access</h1>
+          <p className="text-gray-400 dark:text-white/40 text-sm mt-1 font-body">
             {step === 'email' ? 'Enter your email to receive a one-time code.' : `Code sent to ${email}`}
           </p>
         </div>
@@ -79,14 +81,14 @@ function LoginScreen({ onLogin }) {
         {step === 'email' ? (
           <form onSubmit={handleSendOtp} className="space-y-4">
             <div>
-              <label className="block text-white/50 text-xs mb-1 font-body uppercase tracking-wider">Email</label>
+              <label className="block text-gray-500 dark:text-white/50 text-xs mb-1 font-body uppercase tracking-wider">Email</label>
               <input
                 type="email"
                 required
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/20 focus:outline-none focus:border-[#0D7377] transition-colors font-body text-sm"
+                className="w-full px-4 py-2.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/20 focus:outline-none focus:border-[#0D7377] transition-colors font-body text-sm"
               />
             </div>
             {error && <p className="text-red-400 text-sm font-body">{error}</p>}
@@ -102,7 +104,7 @@ function LoginScreen({ onLogin }) {
         ) : (
           <form onSubmit={handleVerifyOtp} className="space-y-4">
             <div>
-              <label className="block text-white/50 text-xs mb-1 font-body uppercase tracking-wider">8-digit code from email</label>
+              <label className="block text-gray-500 dark:text-white/50 text-xs mb-1 font-body uppercase tracking-wider">8-digit code from email</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -112,7 +114,7 @@ function LoginScreen({ onLogin }) {
                 placeholder="00000000"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-center tracking-widest text-lg placeholder-white/20 focus:outline-none focus:border-[#0D7377] transition-colors font-body"
+                className="w-full px-4 py-2.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-center tracking-widest text-lg placeholder-gray-400 dark:placeholder-white/20 focus:outline-none focus:border-[#0D7377] transition-colors font-body"
               />
             </div>
             {error && <p className="text-red-400 text-sm font-body">{error}</p>}
@@ -127,7 +129,7 @@ function LoginScreen({ onLogin }) {
             <button
               type="button"
               onClick={() => { setStep('email'); setOtp(''); setError('') }}
-              className="w-full text-white/40 text-sm font-body hover:text-white/60 transition-colors"
+              className="w-full text-gray-400 dark:text-white/40 text-sm font-body hover:text-gray-600 dark:hover:text-white/60 transition-colors"
             >
               ← Resend / change email
             </button>
@@ -149,36 +151,36 @@ function SuggestTimeModal({ applicant, onClose, onConfirm }) {
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="w-full max-w-md bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 space-y-4"
+        className="w-full max-w-md bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4"
       >
-        <h3 className="text-white font-display font-bold text-lg">
+        <h3 className="text-gray-900 dark:text-white font-display font-bold text-lg">
           Suggest Interview Time
         </h3>
-        <p className="text-white/50 text-sm font-body">For: {applicant.name} ({applicant.email})</p>
+        <p className="text-gray-500 dark:text-white/50 text-sm font-body">For: {applicant.name} ({applicant.email})</p>
         <div>
-          <label className="block text-white/50 text-xs mb-1 font-body uppercase tracking-wider">Date & Time</label>
+          <label className="block text-gray-500 dark:text-white/50 text-xs mb-1 font-body uppercase tracking-wider">Date &amp; Time</label>
           <input
             type="datetime-local"
             value={datetime}
             onChange={(e) => setDatetime(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-[#0D7377] transition-colors font-body text-sm"
+            className="w-full px-4 py-2.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:border-[#0D7377] transition-colors font-body text-sm"
           />
         </div>
         <div>
-          <label className="block text-white/50 text-xs mb-1 font-body uppercase tracking-wider">Note (optional)</label>
+          <label className="block text-gray-500 dark:text-white/50 text-xs mb-1 font-body uppercase tracking-wider">Note (optional)</label>
           <input
             type="text"
             maxLength={200}
             placeholder="e.g. Google Meet link, platform details…"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/20 focus:outline-none focus:border-[#0D7377] transition-colors font-body text-sm"
+            className="w-full px-4 py-2.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/20 focus:outline-none focus:border-[#0D7377] transition-colors font-body text-sm"
           />
         </div>
         <div className="flex gap-3 pt-2">
           <button
             onClick={onClose}
-            className="flex-1 py-2 rounded-lg border border-white/20 text-white/60 text-sm font-body hover:bg-white/5 transition-colors"
+            className="flex-1 py-2 rounded-lg border border-gray-200 dark:border-white/20 text-gray-500 dark:text-white/60 text-sm font-body hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
           >
             Cancel
           </button>
@@ -246,6 +248,8 @@ function ApplicationsTab() {
         applicant_name: applicant.name,
         new_status: newStatus,
         suggested_time: suggestedTime,
+        app_id: applicant.id,
+        response_token: applicant.response_token,
       },
     }).catch(() => {/* silent */})
   }
@@ -274,7 +278,7 @@ function ApplicationsTab() {
   }
 
   if (loading) {
-    return <div className="text-white/40 text-sm font-body py-8 text-center">Loading applications…</div>
+    return <div className="text-gray-400 dark:text-white/40 text-sm font-body py-8 text-center">Loading applications…</div>
   }
 
   if (fetchError) {
@@ -282,13 +286,13 @@ function ApplicationsTab() {
       <div className="text-center py-12 font-body space-y-3">
         <div className="text-3xl">⚠️</div>
         <p className="text-red-400 text-sm">Failed to load applications</p>
-        <p className="text-white/30 text-xs font-mono bg-white/5 rounded-lg px-4 py-2 inline-block max-w-lg break-all">
+        <p className="text-gray-400 dark:text-white/30 text-xs font-mono bg-gray-100 dark:bg-white/5 rounded-lg px-4 py-2 inline-block max-w-lg break-all">
           {fetchError}
         </p>
         <div className="pt-2">
           <button
             onClick={fetchApplications}
-            className="px-4 py-2 rounded-lg text-sm text-white font-body border border-white/20 hover:bg-white/5 transition-colors"
+            className="px-4 py-2 rounded-lg text-sm text-gray-600 dark:text-white font-body border border-gray-200 dark:border-white/20 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
           >
             Retry
           </button>
@@ -299,12 +303,12 @@ function ApplicationsTab() {
 
   if (applications.length === 0) {
     return (
-      <div className="text-center py-16 text-white/30 font-body">
+      <div className="text-center py-16 text-gray-300 dark:text-white/30 font-body">
         <div className="text-4xl mb-3">📭</div>
         <p>No applications yet.</p>
         <button
           onClick={fetchApplications}
-          className="mt-4 px-4 py-2 rounded-lg text-xs text-white/40 border border-white/10 hover:bg-white/5 transition-colors"
+          className="mt-4 px-4 py-2 rounded-lg text-xs text-gray-400 dark:text-white/40 border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
         >
           Refresh
         </button>
@@ -322,12 +326,26 @@ function ApplicationsTab() {
         />
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-white/10">
+      {/* Stats bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+        {[
+          { label: 'Total', count: applications.length, color: '#6b7280' },
+          { label: 'Pending', count: applications.filter(a => a.status === 'pending').length, color: '#d97706' },
+          { label: 'Approved', count: applications.filter(a => a.status === 'approved').length, color: '#22c55e' },
+          { label: 'Scheduled', count: applications.filter(a => a.status === 'scheduled').length, color: '#8b5cf6' },
+          { label: 'Completed', count: applications.filter(a => a.status === 'completed').length, color: '#9ca3af' },
+        ].map((s) => (
+          <div key={s.label} className="glass-card py-3 text-center">
+            <p className="text-2xl font-display font-bold" style={{ color: s.color }}>{s.count}</p>
+            <p className="text-gray-400 dark:text-white/40 text-xs font-body mt-0.5">{s.label}</p>
+          </div>
+        ))}
+      </div>
         <table className="w-full text-sm font-body">
           <thead>
-            <tr className="bg-white/5 text-white/50 uppercase text-xs tracking-wider">
+            <tr className="bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-white/50 uppercase text-xs tracking-wider">
               <th className="px-4 py-3 text-left">Applicant</th>
-              <th className="px-4 py-3 text-left">Experience</th>
+              <th className="px-4 py-3 text-left">Role / Stack</th>
               <th className="px-4 py-3 text-left">Applied</th>
               <th className="px-4 py-3 text-left">Status</th>
               <th className="px-4 py-3 text-left">Actions</th>
@@ -338,22 +356,28 @@ function ApplicationsTab() {
               <>
                 <tr
                   key={app.id}
-                  className="border-t border-white/5 hover:bg-white/3 cursor-pointer transition-colors"
+                  className="border-t border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/3 cursor-pointer transition-colors"
                   onClick={() => setExpandedId(expandedId === app.id ? null : app.id)}
                 >
                   <td className="px-4 py-3">
-                    <p className="text-white font-semibold">{app.name}</p>
-                    <p className="text-white/40 text-xs">{app.email}</p>
-                    {app.phone && <p className="text-white/30 text-xs">{app.phone}</p>}
+                    <p className="text-gray-900 dark:text-white font-semibold">{app.name}</p>
+                    <p className="text-gray-400 dark:text-white/40 text-xs">{app.email}</p>
+                    {app.phone && <p className="text-gray-300 dark:text-white/30 text-xs">{app.phone}</p>}
                   </td>
-                  <td className="px-4 py-3 text-white/70">{app.experience || '—'}</td>
-                  <td className="px-4 py-3 text-white/50">
+                  <td className="px-4 py-3">
+                    {app.role && (
+                      <span className="inline-block px-2 py-0.5 rounded text-xs font-semibold mb-1" style={{ background: 'rgba(255,88,0,0.1)', color: '#FF5800', border: '1px solid rgba(255,88,0,0.3)' }}>{app.role}</span>
+                    )}
+                    {app.tech_stack && <p className="text-gray-500 dark:text-white/50 text-xs">{app.tech_stack}</p>}
+                    {!app.role && <span className="text-gray-300 dark:text-white/30">—</span>}
+                  </td>
+                  <td className="px-4 py-3 text-gray-500 dark:text-white/50">
                     {new Date(app.created_at).toLocaleDateString('en-IN')}
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge status={app.status} />
                     {app.suggested_time && (
-                      <p className="text-blue-300/70 text-xs mt-1">{app.suggested_time}</p>
+                      <p className="text-blue-400/70 text-xs mt-1">{app.suggested_time}</p>
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -361,35 +385,66 @@ function ApplicationsTab() {
                       <button
                         disabled={actionLoading === app.id || app.status === 'approved'}
                         onClick={() => updateStatus(app, 'approved')}
-                        className="px-2 py-1 rounded text-xs bg-green-500/20 text-green-300 hover:bg-green-500/40 disabled:opacity-40 transition-colors"
+                        className="px-2 py-1 rounded text-xs bg-green-500/20 text-green-700 dark:text-green-300 hover:bg-green-500/40 disabled:opacity-40 transition-colors"
                       >
                         ✓ Approve
                       </button>
                       <button
                         disabled={actionLoading === app.id}
                         onClick={() => setSuggestTarget(app)}
-                        className="px-2 py-1 rounded text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 disabled:opacity-40 transition-colors"
+                        className="px-2 py-1 rounded text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 hover:bg-blue-500/40 disabled:opacity-40 transition-colors"
                       >
                         📅 Propose Time
                       </button>
+                      {app.status === 'scheduled' && (
+                        <button
+                          disabled={actionLoading === app.id}
+                          onClick={() => updateStatus(app, 'completed')}
+                          className="px-2 py-1 rounded text-xs bg-gray-500/20 text-gray-600 dark:text-gray-300 hover:bg-gray-500/40 disabled:opacity-40 transition-colors"
+                        >
+                          🏁 Done
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
                 {expandedId === app.id && (
-                  <tr key={`${app.id}-detail`} className="bg-white/3 border-t border-white/5">
+                  <tr key={`${app.id}-detail`} className="bg-gray-50 dark:bg-white/3 border-t border-gray-100 dark:border-white/5">
                     <td colSpan={5} className="px-4 py-3">
                       {app.preferred_time && (
                         <div className="mb-3">
-                          <p className="text-white/50 text-xs uppercase tracking-wider mb-1">Preferred Interview Time</p>
-                          <p className="text-yellow-300/80 text-sm font-body">
-                            📅 {new Date(app.preferred_time).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
-                          </p>
+                          <p className="text-gray-400 dark:text-white/50 text-xs uppercase tracking-wider mb-1">Preferred Time</p>
+                          <p className="text-yellow-600 dark:text-yellow-300/80 text-sm font-body">📅 {app.preferred_time}</p>
                         </div>
                       )}
-                      <p className="text-white/50 text-xs uppercase tracking-wider mb-1">Message</p>
-                      <p className="text-white/80 text-sm font-body whitespace-pre-wrap">
-                        {app.message || <em className="text-white/30">No message provided</em>}
+                      {app.resume_url && (
+                        <div className="mb-3">
+                          <a
+                            href={app.resume_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white/80 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
+                          >
+                            📎 View Resume
+                          </a>
+                        </div>
+                      )}
+                      <p className="text-gray-400 dark:text-white/50 text-xs uppercase tracking-wider mb-1">Message</p>
+                      <p className="text-gray-700 dark:text-white/80 text-sm font-body whitespace-pre-wrap">
+                        {app.message || <em className="text-gray-300 dark:text-white/30">No message provided</em>}
                       </p>
+                      <div className="mt-3">
+                        <p className="text-gray-400 dark:text-white/50 text-xs uppercase tracking-wider mb-1">Admin Notes</p>
+                        <textarea
+                          rows={2}
+                          defaultValue={app.notes || ''}
+                          placeholder="Private notes..."
+                          onBlur={async (e) => {
+                            await supabase.from('applications').update({ notes: e.target.value }).eq('id', app.id)
+                          }}
+                          className="w-full px-3 py-2 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-800 dark:text-white/80 placeholder-gray-400 dark:placeholder-white/25 text-xs font-body resize-none focus:outline-none focus:border-[#FF5800] transition-colors"
+                        />
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -399,7 +454,7 @@ function ApplicationsTab() {
         </table>
       </div>
 
-      <p className="text-white/30 text-xs font-body mt-3">
+      <p className="text-gray-400 dark:text-white/30 text-xs font-body mt-3">
         {applications.length} application{applications.length !== 1 ? 's' : ''} · Click a row to expand message
       </p>
     </>
@@ -482,13 +537,13 @@ function ResourcesTab() {
             onChange={handleUpload}
           />
         </label>
-        <p className="text-white/40 text-sm font-body">PDF, PPT, DOC — shown publicly on Interview page</p>
+        <p className="text-gray-400 dark:text-white/40 text-sm font-body">PDF, PPT, DOC — shown publicly on Interview page</p>
       </div>
 
       {loading ? (
-        <div className="text-white/40 text-sm font-body">Loading files…</div>
+        <div className="text-gray-400 dark:text-white/40 text-sm font-body">Loading files…</div>
       ) : files.length === 0 ? (
-        <div className="text-center py-12 text-white/30 font-body">
+        <div className="text-center py-12 text-gray-300 dark:text-white/30 font-body">
           <div className="text-3xl mb-2">📁</div>
           <p>No files uploaded yet.</p>
         </div>
@@ -497,13 +552,13 @@ function ResourcesTab() {
           {files.map((file) => (
             <div
               key={file.name}
-              className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3"
+              className="flex items-center justify-between bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <span className="text-xl">📄</span>
                 <div className="min-w-0">
-                  <p className="text-white/90 text-sm font-body truncate">{file.name}</p>
-                  <p className="text-white/30 text-xs">
+                  <p className="text-gray-800 dark:text-white/90 text-sm font-body truncate">{file.name}</p>
+                  <p className="text-gray-400 dark:text-white/30 text-xs">
                     {file.metadata?.size
                       ? `${(file.metadata.size / 1024).toFixed(0)} KB`
                       : ''}
@@ -515,7 +570,7 @@ function ResourcesTab() {
                   href={publicUrl(file.name)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1.5 rounded-lg text-xs bg-white/10 text-white/70 hover:bg-white/20 transition-colors font-body"
+                  className="px-3 py-1.5 rounded-lg text-xs bg-gray-200 dark:bg-white/10 text-gray-600 dark:text-white/70 hover:bg-gray-300 dark:hover:bg-white/20 transition-colors font-body"
                 >
                   Preview
                 </a>
@@ -563,7 +618,7 @@ export default function AdminPanel() {
   // Still checking session
   if (session === undefined) {
     return (
-      <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-[#0D7377] border-t-transparent rounded-full animate-spin" />
       </div>
     )
@@ -574,17 +629,17 @@ export default function AdminPanel() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d] px-4 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0d0d0d] px-4 py-8">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-white font-display font-bold text-2xl">Admin Dashboard</h1>
-            <p className="text-white/40 text-sm font-body mt-0.5">{session.user.email}</p>
+            <h1 className="text-gray-900 dark:text-white font-display font-bold text-2xl">Admin Dashboard</h1>
+            <p className="text-gray-400 dark:text-white/40 text-sm font-body mt-0.5">{session.user.email}</p>
           </div>
           <button
             onClick={handleLogout}
-            className="px-4 py-2 rounded-lg border border-white/20 text-white/60 text-sm font-body hover:bg-white/5 transition-colors"
+            className="px-4 py-2 rounded-lg border border-gray-200 dark:border-white/20 text-gray-500 dark:text-white/60 text-sm font-body hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
           >
             Sign Out
           </button>
@@ -598,8 +653,9 @@ export default function AdminPanel() {
               onClick={() => setActiveTab(tab.id)}
               className="px-5 py-2 rounded-lg text-sm font-semibold transition-all"
               style={{
-                background: activeTab === tab.id ? '#0D7377' : 'rgba(255,255,255,0.05)',
-                color: activeTab === tab.id ? '#fff' : 'rgba(255,255,255,0.5)',
+                background: activeTab === tab.id ? '#0D7377' : 'var(--bg-card)',
+                color: activeTab === tab.id ? '#fff' : 'var(--text-secondary)',
+                border: `1px solid ${activeTab === tab.id ? '#0D7377' : 'var(--border-primary)'}`,
               }}
             >
               {tab.label}

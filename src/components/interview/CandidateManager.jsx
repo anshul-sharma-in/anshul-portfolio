@@ -3,15 +3,19 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabaseClient'
 
 const STATUS_COLORS = {
-  pending: 'text-yellow-300',
-  approved: 'text-green-400',
-  time_suggested: 'text-blue-300',
+  pending: 'text-yellow-600 dark:text-yellow-300',
+  approved: 'text-green-600 dark:text-green-400',
+  time_suggested: 'text-blue-600 dark:text-blue-300',
+  scheduled: 'text-purple-600 dark:text-purple-300',
+  completed: 'text-gray-500 dark:text-gray-400',
 }
 
 const STATUS_LABELS = {
   pending: 'Pending',
   approved: 'Approved ✅',
   time_suggested: 'Time Suggested 📅',
+  scheduled: 'Scheduled 🚀',
+  completed: 'Completed 🏁',
 }
 
 function SuggestTimeModal({ applicant, onClose, onConfirm }) {
@@ -22,34 +26,34 @@ function SuggestTimeModal({ applicant, onClose, onConfirm }) {
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="w-full max-w-md bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 space-y-4"
+        className="w-full max-w-md bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4"
       >
-        <h3 className="text-white font-display font-bold text-lg">Suggest Interview Time</h3>
-        <p className="text-white/50 text-sm font-body">For: {applicant.name} ({applicant.email})</p>
+        <h3 className="text-gray-900 dark:text-white font-display font-bold text-lg">Suggest Interview Time</h3>
+        <p className="text-gray-500 dark:text-white/50 text-sm font-body">For: {applicant.name} ({applicant.email})</p>
         <div>
-          <label className="block text-white/50 text-xs mb-1 font-body uppercase tracking-wider">Date & Time</label>
+          <label className="block text-gray-500 dark:text-white/50 text-xs mb-1 font-body uppercase tracking-wider">Date &amp; Time</label>
           <input
             type="datetime-local"
             value={datetime}
             onChange={(e) => setDatetime(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
+            className="w-full px-4 py-2.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
           />
         </div>
         <div>
-          <label className="block text-white/50 text-xs mb-1 font-body uppercase tracking-wider">Note (optional)</label>
+          <label className="block text-gray-500 dark:text-white/50 text-xs mb-1 font-body uppercase tracking-wider">Note (optional)</label>
           <input
             type="text"
             maxLength={200}
             placeholder="e.g. Google Meet link, platform…"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/20 focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
+            className="w-full px-4 py-2.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/20 focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
           />
         </div>
         <div className="flex gap-3 pt-1">
           <button
             onClick={onClose}
-            className="flex-1 py-2 rounded-lg border border-white/20 text-white/60 text-sm font-body hover:bg-white/5 transition-colors"
+            className="flex-1 py-2 rounded-lg border border-gray-200 dark:border-white/20 text-gray-500 dark:text-white/60 text-sm font-body hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
           >
             Cancel
           </button>
@@ -95,6 +99,8 @@ export default function CandidateManager() {
         applicant_name: applicant.name,
         new_status: newStatus,
         suggested_time: suggestedTime,
+        app_id: applicant.id,
+        response_token: applicant.response_token,
       },
     }).catch(() => {})
   }
@@ -148,13 +154,13 @@ export default function CandidateManager() {
       </AnimatePresence>
 
       <div>
-        <h3 className="font-display font-bold text-xl text-white mb-2">Candidate Management</h3>
-        <p className="text-white/40 text-sm font-body mb-6">
+        <h3 className="font-display font-bold text-xl text-gray-900 dark:text-white mb-2">Candidate Management</h3>
+        <p className="text-gray-400 dark:text-white/40 text-sm font-body mb-6">
           {applications.length} application{applications.length !== 1 ? 's' : ''} · Click a row to expand message
         </p>
 
         {applications.length === 0 ? (
-          <div className="text-center py-12 text-white/30 font-body">
+          <div className="text-center py-12 text-gray-300 dark:text-white/30 font-body">
             <div className="text-4xl mb-3">📭</div>
             <p>No applications yet.</p>
           </div>
@@ -165,16 +171,16 @@ export default function CandidateManager() {
                 key={a.id}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-xl border border-white/10 bg-white/3 overflow-hidden"
+                className="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/3 overflow-hidden"
               >
                 {/* Main row */}
                 <div
-                  className="flex flex-wrap items-start gap-3 px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
+                  className="flex flex-wrap items-start gap-3 px-4 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
                   onClick={() => setExpandedId(expandedId === a.id ? null : a.id)}
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-white font-body">{a.name}</p>
-                    <p className="text-white/50 text-xs">
+                    <p className="font-semibold text-gray-900 dark:text-white font-body">{a.name}</p>
+                    <p className="text-gray-500 dark:text-white/50 text-xs">
                       {a.email}
                       {a.phone ? ` · ${a.phone}` : ''}
                       {a.experience ? ` · ${a.experience} exp` : ''}
@@ -186,10 +192,10 @@ export default function CandidateManager() {
 
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <div className="text-right">
-                      <p className="text-white/30 text-xs">
+                      <p className="text-gray-400 dark:text-white/30 text-xs">
                         {new Date(a.created_at).toLocaleDateString('en-IN')}
                       </p>
-                      <p className={`text-xs font-semibold mt-0.5 ${STATUS_COLORS[a.status] || 'text-white/50'}`}>
+                      <p className={`text-xs font-semibold mt-0.5 ${STATUS_COLORS[a.status] || 'text-gray-500 dark:text-white/50'}`}>
                         {STATUS_LABELS[a.status] || a.status}
                       </p>
                     </div>
@@ -200,7 +206,7 @@ export default function CandidateManager() {
                         disabled={actionLoading === a.id || a.status === 'approved'}
                         onClick={() => updateStatus(a, 'approved')}
                         title="Approve"
-                        className="px-2.5 py-1.5 rounded-lg text-xs bg-green-500/20 text-green-300 hover:bg-green-500/40 disabled:opacity-30 transition-colors"
+                        className="px-2.5 py-1.5 rounded-lg text-xs bg-green-500/20 text-green-700 dark:text-green-300 hover:bg-green-500/40 disabled:opacity-30 transition-colors"
                       >
                         ✓
                       </button>
@@ -208,10 +214,20 @@ export default function CandidateManager() {
                         disabled={actionLoading === a.id}
                         onClick={() => setSuggestTarget(a)}
                         title="Propose new time"
-                        className="px-2.5 py-1.5 rounded-lg text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 disabled:opacity-30 transition-colors"
+                        className="px-2.5 py-1.5 rounded-lg text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 hover:bg-blue-500/40 disabled:opacity-30 transition-colors"
                       >
                         📅
                       </button>
+                      {a.status === 'scheduled' && (
+                        <button
+                          disabled={actionLoading === a.id}
+                          onClick={() => updateStatus(a, 'completed')}
+                          title="Mark as completed"
+                          className="px-2.5 py-1.5 rounded-lg text-xs bg-gray-500/20 text-gray-600 dark:text-gray-300 hover:bg-gray-500/40 disabled:opacity-30 transition-colors"
+                        >
+                          🏁
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -224,20 +240,64 @@ export default function CandidateManager() {
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="overflow-hidden border-t border-white/5 px-4 py-3 bg-white/3"
+                      className="overflow-hidden border-t border-gray-100 dark:border-white/5 px-4 py-3 bg-gray-50 dark:bg-white/3"
                     >
-                      <p className="text-white/40 text-xs uppercase tracking-wider mb-1 font-body">Message</p>
-                      <p className="text-white/75 text-sm font-body whitespace-pre-wrap">
-                        {a.message || <em className="text-white/25">No message provided</em>}
+                      <p className="text-gray-400 dark:text-white/40 text-xs uppercase tracking-wider mb-1 font-body">Message</p>
+                      <p className="text-gray-700 dark:text-white/75 text-sm font-body whitespace-pre-wrap">
+                        {a.message || <em className="text-gray-300 dark:text-white/25">No message provided</em>}
                       </p>
-                      {a.preferred_time && (
-                        <div className="mt-3">
-                          <p className="text-white/40 text-xs uppercase tracking-wider mb-1 font-body">Preferred Interview Time</p>
-                          <p className="text-[#FFD500]/80 text-sm font-body">
-                            📅 {new Date(a.preferred_time).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
-                          </p>
+                      {(a.role || a.tech_stack) && (
+                        <div className="mt-3 flex flex-wrap gap-4">
+                          {a.role && (
+                            <div>
+                              <p className="text-gray-400 dark:text-white/40 text-xs uppercase tracking-wider mb-1 font-body">Role</p>
+                              <span className="px-2 py-0.5 rounded text-xs font-semibold" style={{ background: 'rgba(255,88,0,0.1)', color: '#FF5800', border: '1px solid rgba(255,88,0,0.3)' }}>{a.role}</span>
+                            </div>
+                          )}
+                          {a.tech_stack && (
+                            <div>
+                              <p className="text-gray-400 dark:text-white/40 text-xs uppercase tracking-wider mb-1 font-body">Tech Stack</p>
+                              <p className="text-gray-600 dark:text-white/70 text-xs font-body">{a.tech_stack}</p>
+                            </div>
+                          )}
                         </div>
                       )}
+                      {a.resume_url && (
+                        <div className="mt-3">
+                          <a
+                            href={a.resume_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white/80 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
+                          >
+                            📎 View Resume
+                          </a>
+                        </div>
+                      )}
+                      {a.preferred_time && (
+                        <div className="mt-3">
+                          <p className="text-gray-400 dark:text-white/40 text-xs uppercase tracking-wider mb-1 font-body">Preferred Time</p>
+                          <p className="text-[#FFD500]/80 text-sm font-body">📅 {a.preferred_time}</p>
+                        </div>
+                      )}
+                      {a.suggested_time && (
+                        <div className="mt-3">
+                          <p className="text-gray-400 dark:text-white/40 text-xs uppercase tracking-wider mb-1 font-body">Suggested Time</p>
+                          <p className="text-blue-400 text-sm font-body">📅 {a.suggested_time}</p>
+                        </div>
+                      )}
+                      <div className="mt-4">
+                        <p className="text-gray-400 dark:text-white/40 text-xs uppercase tracking-wider mb-1 font-body">Admin Notes</p>
+                        <textarea
+                          rows={3}
+                          defaultValue={a.notes || ''}
+                          placeholder="Add private notes about this candidate..."
+                          onBlur={async (e) => {
+                            await supabase.from('applications').update({ notes: e.target.value }).eq('id', a.id)
+                          }}
+                          className="w-full px-3 py-2 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-800 dark:text-white/80 placeholder-gray-400 dark:placeholder-white/25 text-xs font-body resize-none focus:outline-none focus:border-[#FF5800] transition-colors"
+                        />
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>

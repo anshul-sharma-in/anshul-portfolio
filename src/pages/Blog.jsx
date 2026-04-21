@@ -105,7 +105,7 @@ export default function Experience() {
                       <h3 className="font-display font-bold text-lg" style={{ color: role.color }}>
                         {role.title}
                       </h3>
-                      <p className="text-white/70 text-sm font-body">{role.company}</p>
+                      <p className="text-gray-600 dark:text-white/70 text-sm font-body">{role.company}</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {role.current && (
@@ -116,13 +116,13 @@ export default function Experience() {
                           Current
                         </span>
                       )}
-                      <span className="text-white/40 text-xs font-body">{role.period}</span>
+                      <span className="text-gray-400 dark:text-white/40 text-xs font-body">{role.period}</span>
                     </div>
                   </div>
 
                   <ul className="mt-4 space-y-2">
                     {role.bullets.map((b, bi) => (
-                      <li key={bi} className="flex gap-2 text-sm text-white/65 font-body leading-relaxed">
+                      <li key={bi} className="flex gap-2 text-sm text-gray-600 dark:text-white/65 font-body leading-relaxed">
                         <span style={{ color: role.color }} className="mt-1 flex-shrink-0">▸</span>
                         {b}
                       </li>
@@ -131,7 +131,7 @@ export default function Experience() {
 
                   {role.projects.length > 0 && (
                     <div className="mt-6">
-                      <p className="text-white/40 text-xs font-display uppercase tracking-widest mb-3">Key Projects</p>
+                      <p className="text-gray-400 dark:text-white/40 text-xs font-display uppercase tracking-widest mb-3">Key Projects</p>
                       <div className="space-y-3">
                         {role.projects.map((proj, pi) => (
                           <div
@@ -140,15 +140,15 @@ export default function Experience() {
                             style={{ background: `${role.color}0d`, border: `1px solid ${role.color}33` }}
                           >
                             <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                              <span className="font-display font-semibold text-sm text-white/90">{proj.name}</span>
-                              <span className="text-white/35 text-xs font-body">{proj.period}</span>
+                              <span className="font-display font-semibold text-sm text-gray-800 dark:text-white/90">{proj.name}</span>
+                              <span className="text-gray-400 dark:text-white/35 text-xs font-body">{proj.period}</span>
                             </div>
-                            <p className="text-white/55 text-xs font-body leading-relaxed mb-2">{proj.desc}</p>
+                            <p className="text-gray-500 dark:text-white/55 text-xs font-body leading-relaxed mb-2">{proj.desc}</p>
                             <div className="flex flex-wrap gap-1.5">
                               {proj.tech.map((t) => (
                                 <span
                                   key={t}
-                                  className="px-2 py-0.5 text-xs rounded font-body text-white/60"
+                                  className="px-2 py-0.5 text-xs rounded font-body text-gray-600 dark:text-white/60"
                                   style={{ background: `${role.color}18`, border: `1px solid ${role.color}44` }}
                                 >
                                   {t}

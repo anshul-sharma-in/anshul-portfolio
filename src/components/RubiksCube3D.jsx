@@ -96,3 +96,20 @@ export default function RubiksCube3D({ height = '400px' }) {
     </div>
   )
 }
+
+export function MiniRubiksCube({ size = 40 }) {
+  return (
+    <div style={{ width: size, height: size, flexShrink: 0 }}>
+      <Canvas
+        camera={{ position: [4.5, 3.5, 4.5], fov: 42 }}
+        gl={{ antialias: true, alpha: true }}
+        style={{ background: 'transparent' }}
+      >
+        <ambientLight intensity={0.7} />
+        <directionalLight position={[8, 10, 6]} intensity={1.8} />
+        <directionalLight position={[-6, -4, -4]} intensity={0.4} />
+        <RotatingCube />
+      </Canvas>
+    </div>
+  )
+}

@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import RubiksCube3D from '../components/RubiksCube3D'
-import RubiksNavGrid from '../components/RubiksNavGrid'
+import { useNavigate } from 'react-router-dom'
+import RubiksCube3D, { MiniRubiksCube } from '../components/RubiksCube3D'
+import InteractiveCube from '../components/InteractiveCube'
+import HowItWorks from '../components/HowItWorks'
+import { useFunMode } from '../context/FunModeContext'
 
 // Splash screen durations
 const SPLASH_DURATION = 3200 // ms before transitioning to main content
@@ -106,7 +109,9 @@ function SplashScreen({ onDone }) {
   )
 }
 
-export default function Home() {
+// ─── Fun Mode: original splash + cube nav ───────────────────────────────────
+
+function FunModeHome() {
   const [splashDone, setSplashDone] = useState(false)
 
   return (
@@ -167,7 +172,6 @@ export default function Home() {
                 transition={{ delay: 0.5, type: 'spring' }}
                 className="flex flex-col items-center md:items-start gap-4 text-center md:text-left"
               >
-                {/* Profile picture placeholder */}
                 <div
                   className="w-40 h-40 rounded-full border-4 overflow-hidden flex items-center justify-center text-5xl font-bold text-white/30"
                   style={{
@@ -176,7 +180,6 @@ export default function Home() {
                     background: 'linear-gradient(135deg, #1a0500, #0a0a0a)',
                   }}
                 >
-                  {/* Replace src with your actual photo */}
                   AS
                 </div>
 
@@ -207,19 +210,19 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.9 }}
-              className="mt-10 mb-4 text-white/40 text-sm tracking-widest font-display uppercase"
+              className="mt-10 mb-2 text-white/40 text-sm tracking-widest font-display uppercase"
             >
-              — Click a block to explore —
+              ― Drag to rotate · Click a face to explore ―
             </motion.p>
 
-            {/* 3x3 Navigation Grid */}
+            {/* Interactive Navigation Cube */}
             <motion.div
               initial={{ y: 40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 1, duration: 0.6 }}
-              className="w-full max-w-lg"
+              className="w-full max-w-xl"
             >
-              <RubiksNavGrid />
+              <InteractiveCube />
             </motion.div>
 
             {/* Footer */}
@@ -229,11 +232,100 @@ export default function Home() {
               transition={{ delay: 1.4 }}
               className="mt-12 text-white/20 text-xs font-body text-center"
             >
-              © 2026 Anshul Sharma · Built with ☕ + React + Three.js
+              <p>© 2026 Anshul Sharma · Built with ☕ + React + Three.js</p>
             </motion.footer>
           </motion.main>
         )}
       </AnimatePresence>
     </div>
   )
+}
+
+// ─── Professional Mode: clean landing page ──────────────────────────────────
+
+function ProfessionalHome() {
+  const navigate = useNavigate()
+  const { toggleFunMode } = useFunMode()
+
+  return (
+    <div className="min-h-screen">
+      {/* Hero */}
+      <section className="max-w-5xl mx-auto px-6 pt-20 pb-16 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <p className="font-display text-[#FF5800] text-xs tracking-[0.4em] uppercase mb-5">
+            Senior Software Engineer
+          </p>
+          <h1 className="font-display font-bold text-4xl md:text-6xl text-gray-900 mb-5 leading-tight">
+            Mock Interviews for{' '}
+            <span style={{ color: '#FF5800' }}>Real-World</span> Preparation
+          </h1>
+          <p className="text-gray-500 text-lg font-body max-w-2xl mx-auto leading-relaxed mb-10">
+            Personalized mock interviews for Vue, JavaScript, .NET, and AWS.
+            Get honest feedback and guidance to crack your dream job.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button onClick={() => navigate('/projects')} className="btn-outline">
+              View Portfolio
+            </button>
+            <button onClick={() => navigate('/interview')} className="btn-primary">
+              Book Mock Interview →
+            </button>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* How it works */}
+      <div className="border-t border-gray-200">
+        <HowItWorks />
+      </div>
+
+      {/* Brief about */}
+      <section className="max-w-4xl mx-auto px-6 py-16 text-center border-t border-gray-200">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <p className="text-gray-700 text-lg font-body leading-relaxed">
+            I'm <span className="font-semibold" style={{ color: '#FF5800' }}>Anshul Sharma</span> — a Senior Software Engineer at Morningstar
+            with 5+ years in full-stack development (Vue, .NET, AWS).
+            I conduct mock interviews to help developers land their dream roles.
+          </p>
+          <div className="mt-8 flex gap-4 justify-center flex-wrap">
+            <button onClick={() => navigate('/about')} className="btn-outline text-sm">
+              More About Me
+            </button>
+            <button onClick={() => navigate('/contact')} className="btn-primary text-sm">
+              Get in Touch
+            </button>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-200 py-8 text-center">
+        <div className="flex items-center justify-center gap-6 flex-wrap text-sm text-gray-400 font-body">
+          <span>© 2026 Anshul Sharma</span>
+          <button
+            onClick={toggleFunMode}
+            title="Switch to Cube Mode"
+            className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <MiniRubiksCube size={34} />
+          </button>
+        </div>
+      </footer>
+    </div>
+  )
+}
+
+// ─── Root: switch based on mode ──────────────────────────────────────────────
+
+export default function Home() {
+  const { isFunMode } = useFunMode()
+  return isFunMode ? <FunModeHome /> : <ProfessionalHome />
 }

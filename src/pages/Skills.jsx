@@ -74,10 +74,10 @@ export default function Skills() {
                 {cat.items.map((skill, si) => (
                   <div key={skill.name}>
                     <div className="flex justify-between mb-1">
-                      <span className="text-white/80 text-sm font-body">{skill.name}</span>
-                      <span className="text-white/40 text-xs">{skill.level}%</span>
+                      <span className="text-gray-700 dark:text-white/80 text-sm font-body">{skill.name}</span>
+                      <span className="text-gray-400 dark:text-white/40 text-xs">{skill.level}%</span>
                     </div>
-                    <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
                       <motion.div
                         className="h-full rounded-full"
                         style={{ background: cat.color }}
@@ -103,7 +103,7 @@ export default function Skills() {
         >
           <p className="text-4xl mb-2">🧩</p>
           <p className="font-display font-bold text-[#FFD500]">Rubik's Cube Solver</p>
-          <p className="text-white/50 text-sm mt-1 font-body">3×3, 4×4 | Fastest solve: &lt;30s — and counting</p>
+          <p className="text-gray-500 dark:text-white/50 text-sm mt-1 font-body">3×3, 4×4 | Fastest solve: &lt;30s — and counting</p>
         </motion.div>
       </div>
     </PageTransition>

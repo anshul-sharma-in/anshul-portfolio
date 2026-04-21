@@ -42,19 +42,19 @@ export default function Projects() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="glass-card hover:border-white/30 transition-all duration-300 group"
+              className="glass-card hover:border-gray-300 dark:hover:border-white/30 transition-all duration-300 group"
               style={{ borderTop: `3px solid ${p.color}` }}
             >
-              <h3 className="font-display font-bold text-lg text-white group-hover:text-[#FF5800] transition-colors">
+              <h3 className="font-display font-bold text-lg text-gray-900 dark:text-white group-hover:text-[#FF5800] transition-colors">
                 {p.title}
               </h3>
-              <p className="mt-2 text-white/60 text-sm leading-relaxed font-body">{p.desc}</p>
+              <p className="mt-2 text-gray-500 dark:text-white/60 text-sm leading-relaxed font-body">{p.desc}</p>
 
               <div className="mt-4 flex flex-wrap gap-2">
                 {p.tech.map((t) => (
                   <span
                     key={t}
-                    className="px-2 py-0.5 text-xs rounded font-body text-white/70"
+                    className="px-2 py-0.5 text-xs rounded font-body text-gray-600 dark:text-white/70"
                     style={{ background: `${p.color}22`, border: `1px solid ${p.color}55` }}
                   >
                     {t}
