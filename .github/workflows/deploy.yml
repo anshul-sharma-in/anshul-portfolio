@@ -44,18 +44,18 @@ jobs:
 
       - name: Sync to S3
         run: |
-          aws s3 sync dist/ s3://${{ secrets.S3_BUCKET }} \
+          aws s3 sync dist/ s3://${{ secrets.AWS_S3_BUCKET }} \
             --delete \
             --cache-control "public, max-age=31536000, immutable" \
             --exclude "index.html"
 
           # index.html must not be cached — browsers always fetch fresh
-          aws s3 cp dist/index.html s3://${{ secrets.S3_BUCKET }}/index.html \
+          aws s3 cp dist/index.html s3://${{ secrets.AWS_S3_BUCKET }}/index.html \
             --cache-control "no-cache, no-store, must-revalidate" \
             --content-type "text/html"
 
       - name: Invalidate CloudFront cache
         run: |
           aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CF_DISTRIBUTION_ID }} \
+            --distribution-id ${{ secrets.AWS_CF_DISTRIBUTION_ID }} \
             --paths "/*"
