@@ -160,7 +160,7 @@ function FunModeHome() {
                 initial={{ x: -60, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.4, type: 'spring' }}
-                className="w-full md:w-1/2"
+                className="w-full md:w-1/2 relative"
               >
                 <RubiksCube3D height="360px" />
               </motion.div>

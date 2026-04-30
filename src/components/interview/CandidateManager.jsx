@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabaseClient'
+import EvaluationModal from './EvaluationModal'
+import { avg, formatScore, overallScore, scoreColor, subSkillLabel } from './evaluationHelpers'
 
 const STATUS_COLORS = {
   pending: 'text-yellow-600 dark:text-yellow-300',
@@ -8,6 +10,9 @@ const STATUS_COLORS = {
   time_suggested: 'text-blue-600 dark:text-blue-300',
   scheduled: 'text-purple-600 dark:text-purple-300',
   completed: 'text-gray-500 dark:text-gray-400',
+  done: 'text-fuchsia-600 dark:text-fuchsia-300',
+  cancelled: 'text-red-600 dark:text-red-400',
+  no_show: 'text-orange-600 dark:text-orange-400',
 }
 
 const STATUS_LABELS = {
@@ -16,7 +21,12 @@ const STATUS_LABELS = {
   time_suggested: 'Time Suggested 📅',
   scheduled: 'Scheduled 🚀',
   completed: 'Completed 🏁',
+  done: 'Done 🏁',
+  cancelled: 'Cancelled ❌',
+  no_show: 'No-show 👻',
 }
+
+const HIDDEN_STATUSES = new Set(['rejected'])
 
 function SuggestTimeModal({ applicant, onClose, onConfirm }) {
   const [datetime, setDatetime] = useState('')
@@ -77,7 +87,9 @@ export default function CandidateManager() {
   const [error, setError] = useState(null)
   const [actionLoading, setActionLoading] = useState(null)
   const [suggestTarget, setSuggestTarget] = useState(null)
+  const [evalTarget, setEvalTarget] = useState(null)
   const [expandedId, setExpandedId] = useState(null)
+  const [showCancelled, setShowCancelled] = useState(false)
 
   const fetchApplications = useCallback(async () => {
     setLoading(true)
@@ -86,7 +98,7 @@ export default function CandidateManager() {
       .select('*')
       .order('created_at', { ascending: false })
     if (err) setError(err.message)
-    else setApplications((data ?? []).filter(a => a.status !== 'rejected'))
+    else setApplications(data ?? [])
     setLoading(false)
   }, [])
 
@@ -128,18 +140,40 @@ export default function CandidateManager() {
     setSuggestTarget(null)
   }
 
+  const handleEvalSave = async (evaluation) => {
+    await updateStatus(evalTarget, 'done', { evaluation })
+    setEvalTarget(null)
+  }
+
+  const handleCancel = (row) => {
+    if (!window.confirm(`Cancel interview with ${row.name}?`)) return
+    updateStatus(row, 'cancelled')
+  }
+
+  const handleNoShow = (row) => {
+    if (!window.confirm(`Mark ${row.name} as no-show?`)) return
+    updateStatus(row, 'no_show')
+  }
+
   if (loading) {
-    return <div className="text-white/40 text-sm font-body py-6">Loading applications…</div>
+    return <div className="text-gray-500 dark:text-white/40 text-sm font-body py-6">Loading applications…</div>
   }
 
   if (error) {
     return (
       <div className="space-y-2">
-        <p className="text-red-400 text-sm font-body">Failed to load: {error}</p>
-        <p className="text-white/30 text-xs font-body">Check Supabase RLS policies — authenticated users need SELECT access.</p>
+        <p className="text-red-500 dark:text-red-400 text-sm font-body">Failed to load: {error}</p>
+        <p className="text-gray-400 dark:text-white/30 text-xs font-body">Check Supabase RLS policies — authenticated users need SELECT access.</p>
       </div>
     )
   }
+
+  const visible = applications.filter((a) => {
+    if (HIDDEN_STATUSES.has(a.status)) return false
+    if (!showCancelled && a.status === 'cancelled') return false
+    return true
+  })
+  const cancelledCount = applications.filter((a) => a.status === 'cancelled').length
 
   return (
     <>
@@ -151,22 +185,40 @@ export default function CandidateManager() {
             onConfirm={handleSuggestConfirm}
           />
         )}
+        {evalTarget && (
+          <EvaluationModal
+            applicant={evalTarget}
+            initial={evalTarget.evaluation}
+            onClose={() => setEvalTarget(null)}
+            onSave={handleEvalSave}
+          />
+        )}
       </AnimatePresence>
 
       <div>
         <h3 className="font-display font-bold text-xl text-gray-900 dark:text-white mb-2">Candidate Management</h3>
-        <p className="text-gray-400 dark:text-white/40 text-sm font-body mb-6">
-          {applications.length} application{applications.length !== 1 ? 's' : ''} · Click a row to expand message
-        </p>
+        <div className="flex items-center justify-between mb-6 gap-3">
+          <p className="text-gray-400 dark:text-white/40 text-sm font-body">
+            {visible.length} application{visible.length !== 1 ? 's' : ''} · Click a row to expand
+          </p>
+          {cancelledCount > 0 && (
+            <button
+              onClick={() => setShowCancelled((v) => !v)}
+              className="text-xs font-body text-gray-500 dark:text-white/50 hover:text-[#FF5800] transition-colors"
+            >
+              {showCancelled ? 'Hide' : 'Show'} cancelled ({cancelledCount})
+            </button>
+          )}
+        </div>
 
-        {applications.length === 0 ? (
+        {visible.length === 0 ? (
           <div className="text-center py-12 text-gray-300 dark:text-white/30 font-body">
             <div className="text-4xl mb-3">📭</div>
             <p>No applications yet.</p>
           </div>
         ) : (
           <div className="space-y-2">
-            {applications.map((a) => (
+            {visible.map((a) => (
               <motion.div
                 key={a.id}
                 initial={{ opacity: 0, y: 8 }}
@@ -201,31 +253,64 @@ export default function CandidateManager() {
                     </div>
 
                     {/* Action buttons */}
-                    <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        disabled={actionLoading === a.id || a.status === 'approved'}
-                        onClick={() => updateStatus(a, 'approved')}
-                        title="Approve"
-                        className="px-2.5 py-1.5 rounded-lg text-xs bg-green-500/20 text-green-700 dark:text-green-300 hover:bg-green-500/40 disabled:opacity-30 transition-colors"
-                      >
-                        ✓
-                      </button>
-                      <button
-                        disabled={actionLoading === a.id}
-                        onClick={() => setSuggestTarget(a)}
-                        title="Propose new time"
-                        className="px-2.5 py-1.5 rounded-lg text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 hover:bg-blue-500/40 disabled:opacity-30 transition-colors"
-                      >
-                        📅
-                      </button>
+                    <div className="flex gap-1.5 flex-wrap justify-end" onClick={(e) => e.stopPropagation()}>
+                      {a.status !== 'done' && a.status !== 'cancelled' && a.status !== 'no_show' && (
+                        <>
+                          <button
+                            disabled={actionLoading === a.id || a.status === 'approved'}
+                            onClick={() => updateStatus(a, 'approved')}
+                            title="Approve"
+                            className="px-2.5 py-1.5 rounded-lg text-xs bg-green-500/20 text-green-700 dark:text-green-300 hover:bg-green-500/40 disabled:opacity-30 transition-colors"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            disabled={actionLoading === a.id}
+                            onClick={() => setSuggestTarget(a)}
+                            title="Propose new time"
+                            className="px-2.5 py-1.5 rounded-lg text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 hover:bg-blue-500/40 disabled:opacity-30 transition-colors"
+                          >
+                            📅
+                          </button>
+                        </>
+                      )}
+                      {(a.status === 'scheduled' || a.status === 'approved' || a.status === 'time_suggested') && (
+                        <button
+                          disabled={actionLoading === a.id}
+                          onClick={() => setEvalTarget(a)}
+                          title="Evaluate & mark done"
+                          className="px-2.5 py-1.5 rounded-lg text-xs bg-fuchsia-500/20 text-fuchsia-700 dark:text-fuchsia-300 hover:bg-fuchsia-500/40 disabled:opacity-30 transition-colors"
+                        >
+                          🏁
+                        </button>
+                      )}
+                      {a.status === 'done' && (
+                        <button
+                          onClick={() => setEvalTarget(a)}
+                          title="Edit evaluation"
+                          className="px-2.5 py-1.5 rounded-lg text-xs bg-fuchsia-500/15 text-fuchsia-700 dark:text-fuchsia-300 hover:bg-fuchsia-500/30 transition-colors"
+                        >
+                          ✏️
+                        </button>
+                      )}
                       {a.status === 'scheduled' && (
                         <button
                           disabled={actionLoading === a.id}
-                          onClick={() => updateStatus(a, 'completed')}
-                          title="Mark as completed"
-                          className="px-2.5 py-1.5 rounded-lg text-xs bg-gray-500/20 text-gray-600 dark:text-gray-300 hover:bg-gray-500/40 disabled:opacity-30 transition-colors"
+                          onClick={() => handleNoShow(a)}
+                          title="No-show"
+                          className="px-2.5 py-1.5 rounded-lg text-xs bg-orange-500/20 text-orange-700 dark:text-orange-300 hover:bg-orange-500/40 disabled:opacity-30 transition-colors"
                         >
-                          🏁
+                          👻
+                        </button>
+                      )}
+                      {a.status !== 'cancelled' && a.status !== 'done' && (
+                        <button
+                          disabled={actionLoading === a.id}
+                          onClick={() => handleCancel(a)}
+                          title="Cancel interview"
+                          className="px-2.5 py-1.5 rounded-lg text-xs bg-red-500/15 text-red-700 dark:text-red-300 hover:bg-red-500/35 disabled:opacity-30 transition-colors"
+                        >
+                          ❌
                         </button>
                       )}
                     </div>
@@ -246,6 +331,58 @@ export default function CandidateManager() {
                       <p className="text-gray-700 dark:text-white/75 text-sm font-body whitespace-pre-wrap">
                         {a.message || <em className="text-gray-300 dark:text-white/25">No message provided</em>}
                       </p>
+                      {a.evaluation && (
+                        <div className="mt-4">
+                          <p className="text-gray-400 dark:text-white/40 text-xs uppercase tracking-wider mb-2 font-body">Evaluation</p>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            {(() => {
+                              const overall = overallScore(a.evaluation)
+                              const techAvg = avg(a.evaluation.technical)
+                              const items = [
+                                { label: 'Overall', val: overall },
+                                { label: 'Technical', val: techAvg },
+                                { label: 'Communication', val: a.evaluation.communication },
+                                { label: 'Attitude', val: a.evaluation.attitude },
+                                { label: 'Confidence', val: a.evaluation.confidence },
+                              ]
+                              return items.map(({ label, val }) => {
+                                const c = scoreColor(val)
+                                return (
+                                  <div
+                                    key={label}
+                                    className="rounded-lg px-3 py-2 text-center"
+                                    style={{ background: c.bg, border: `1px solid ${c.border}` }}
+                                  >
+                                    <p className="text-[10px] uppercase tracking-wider font-body" style={{ color: c.text }}>{label}</p>
+                                    <p className="font-display font-bold text-lg" style={{ color: c.text }}>{formatScore(val)}</p>
+                                  </div>
+                                )
+                              })
+                            })()}
+                          </div>
+                          {Object.keys(a.evaluation.technical || {}).length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {Object.entries(a.evaluation.technical).map(([k, v]) => {
+                                const c = scoreColor(v)
+                                return (
+                                  <span
+                                    key={k}
+                                    className="text-xs px-2 py-0.5 rounded font-body"
+                                    style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}` }}
+                                  >
+                                    {subSkillLabel(k)}: {v}
+                                  </span>
+                                )
+                              })}
+                            </div>
+                          )}
+                          {a.evaluation.overall_notes && (
+                            <p className="mt-3 text-gray-600 dark:text-white/65 text-xs font-body italic">
+                              "{a.evaluation.overall_notes}"
+                            </p>
+                          )}
+                        </div>
+                      )}
                       {(a.role || a.tech_stack) && (
                         <div className="mt-3 flex flex-wrap gap-4">
                           {a.role && (

@@ -114,3 +114,32 @@ html.dark {
 canvas { display: block; }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ─── Print: Results tab → clean PDF export ──────────────────────────────── */
+@media print {
+  /* Hide everything by default, then reveal only the results tab */
+  body * { visibility: hidden !important; }
+  .results-tab, .results-tab * { visibility: visible !important; }
+  .results-tab { position: absolute; left: 0; top: 0; width: 100%; padding: 16px; }
+
+  /* Remove app background */
+  body, html { background: #fff !important; color: #000 !important; }
+
+  /* Tables crisp on paper */
+  .results-tab table { border-collapse: collapse; width: 100%; font-size: 11px; }
+  .results-tab th, .results-tab td {
+    border: 1px solid #ddd !important;
+    padding: 6px 8px !important;
+    color: #000 !important;
+    background: #fff !important;
+  }
+  .results-tab thead tr { background: #f3f4f6 !important; }
+
+  /* Keep score badge colors */
+  .results-tab span[style*="background"] {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  @page { margin: 12mm; size: A4 landscape; }
+}

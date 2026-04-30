@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useFunMode } from '../context/FunModeContext'
 import { MiniRubiksCube } from './RubiksCube3D'
+import BrandLogo from './BrandLogo'
 
 const NAV_LINKS = [
   { to: '/about', label: 'About' },
@@ -24,9 +25,13 @@ export default function Navbar() {
         {/* Logo */}
         <button
           onClick={() => navigate('/')}
-          className="font-display font-bold text-lg text-gray-900 hover:text-[#FF5800] transition-colors tracking-wide"
+          className="flex items-center gap-1.5 group"
+          title="Anshul Sharma — Home"
         >
-          Anshul<span style={{ color: '#FF5800' }}>.</span>
+          <BrandLogo size={28} />
+          <span className="font-display font-bold text-lg text-gray-900 tracking-wide group-hover:text-[#FF5800] transition-colors">
+            Anshul Sharma
+          </span>
         </button>
 
         {/* Desktop nav links */}
