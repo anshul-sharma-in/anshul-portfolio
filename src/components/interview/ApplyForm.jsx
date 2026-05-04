@@ -1,4 +1,5 @@
 import { useState } from 'react'
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion'
 import { supabase } from '../../lib/supabaseClient'
 
@@ -11,8 +12,15 @@ const BENEFITS = [
 
 const HOW_IT_WORKS = [
   { step: '01', text: 'Fill out the form below' },
-  { step: '02', text: 'I review & send you a time' },
+  { step: '02', text: 'I email you with the schedule' },
   { step: '03', text: 'We do the mock interview' },
+]
+
+const INTERVIEW_TYPES = [
+  'Technical',
+  'System Design',
+  'Behavioral',
+  'Mixed',
 ]
 
 export default function ApplyForm() {
@@ -23,11 +31,13 @@ export default function ApplyForm() {
     experience: '',
     role: '',
     tech_stack: '',
+    interview_type: '',
     message: '',
   })
   const [preferredTimeRange, setPreferredTimeRange] = useState('')
   const [resumeFile, setResumeFile] = useState(null)
   const [status, setStatus] = useState('idle') // idle | loading | success | error
+  const [errorMessage, setErrorMessage] = useState('')
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -35,18 +45,33 @@ export default function ApplyForm() {
     e.preventDefault()
     setStatus('loading')
     try {
+      const trimmedName = form.name.trim()
+
       // Upload resume if provided
       let resumeUrl = null
       if (resumeFile) {
-        const ext = resumeFile.name.split('.').pop()
-        const fileName = `${Date.now()}-${form.name.replace(/\s+/g, '-').toLowerCase()}.${ext}`
+        // Client-side guard: 5 MB cap, allowed extensions only
+        const MAX_BYTES = 5 * 1024 * 1024
+        const ext = (resumeFile.name.split('.').pop() || '').toLowerCase()
+        if (!['pdf', 'doc', 'docx'].includes(ext)) {
+          throw new Error('Resume must be a PDF, DOC, or DOCX file.')
+        }
+        if (resumeFile.size > MAX_BYTES) {
+          throw new Error('Resume must be 5 MB or smaller.')
+        }
+        const safeName = (trimmedName || 'applicant')
+          .replace(/[^a-zA-Z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+          .toLowerCase() || 'applicant'
+        const fileName = `${Date.now()}-${safeName}.${ext}`
         const { error: uploadError } = await supabase.storage
           .from('resume')
-          .upload(fileName, resumeFile, { upsert: false })
-        if (!uploadError) {
-          const storageBase = import.meta.env.VITE_SUPABASE_STORAGE_URL
-          if (storageBase) resumeUrl = `${storageBase}/resume/${fileName}`
+          .upload(fileName, resumeFile, { upsert: false, contentType: resumeFile.type })
+        if (uploadError) {
+          throw new Error(`Resume upload failed: ${uploadError.message}`)
         }
+        // Bucket is private; store the path. Admin UI signs URLs on demand.
+        resumeUrl = `resume/${fileName}`
       }
 
       const { error } = await supabase.from('applications').insert([
@@ -57,6 +82,7 @@ export default function ApplyForm() {
           experience: form.experience,
           role: form.role,
           tech_stack: form.tech_stack.trim(),
+          interview_type: form.interview_type || null,
           message: form.message.trim(),
           preferred_time: preferredTimeRange || null,
           resume_url: resumeUrl,
@@ -64,22 +90,35 @@ export default function ApplyForm() {
       ])
       if (error) throw error
 
+      const adminPayload = {
+        applicant_name: form.name,
+        applicant_email: form.email,
+        applicant_phone: form.phone || 'Not provided',
+        applicant_experience: form.experience || 'Not specified',
+        applicant_role: form.role || 'Not specified',
+        applicant_tech_stack: form.tech_stack || 'Not specified',
+        applicant_interview_type: form.interview_type || 'Not specified',
+        applicant_message: form.message || 'No message',
+        applicant_resume_url: resumeUrl,
+        preferred_time: preferredTimeRange || null,
+      }
+
       // Notify admin (best-effort)
-      supabase.functions.invoke('notify-admin', {
+      supabase.functions.invoke('notify-admin-new-application', { body: adminPayload }).catch(() => {})
+
+      // Confirm receipt to applicant (best-effort)
+      supabase.functions.invoke('notify-applicant-applied', {
         body: {
+          to_email: form.email.trim().toLowerCase(),
           applicant_name: form.name,
-          applicant_email: form.email,
-          applicant_phone: form.phone || 'Not provided',
-          applicant_experience: form.experience || 'Not specified',
           applicant_role: form.role || 'Not specified',
-          applicant_tech_stack: form.tech_stack || 'Not specified',
-          applicant_message: form.message || 'No message',
-          preferred_time: preferredTimeRange || null,
+          applicant_interview_type: form.interview_type || null,
         },
-      }).catch(() => {/* silent */})
+      }).catch(() => {})
 
       setStatus('success')
-    } catch {
+    } catch (err) {
+      setErrorMessage(err?.message || 'Something went wrong. Please try again.')
       setStatus('error')
     }
   }
@@ -94,7 +133,7 @@ export default function ApplyForm() {
         <div className="text-5xl mb-4">🎯</div>
         <p className="font-display font-bold text-[#FFD500] text-xl">Application Submitted!</p>
         <p className="text-gray-500 dark:text-white/60 text-sm mt-2 font-body">
-          I'll review your application and reach out to your email within 2–3 days.
+          Your mock interview request has been submitted successfully. We'll share your interview schedule via email soon.
         </p>
       </motion.div>
     )
@@ -242,20 +281,36 @@ export default function ApplyForm() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-gray-500 dark:text-white/60 text-sm mb-1 font-body">Tech Stack</label>
-            <input
-              name="tech_stack"
-              maxLength={200}
-              placeholder="e.g. React, Node.js, TypeScript, AWS"
-              value={form.tech_stack}
-              onChange={handleChange}
-              className="w-full px-4 py-2.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
-            />
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-gray-500 dark:text-white/60 text-sm mb-1 font-body">Tech Stack</label>
+              <input
+                name="tech_stack"
+                maxLength={200}
+                placeholder="e.g. React, Node.js, TypeScript, AWS"
+                value={form.tech_stack}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-gray-500 dark:text-white/60 text-sm mb-1 font-body">Interview Type</label>
+              <select
+                name="interview_type"
+                value={form.interview_type}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 rounded-lg bg-gray-100 dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
+              >
+                <option value="">Select type</option>
+                {INTERVIEW_TYPES.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div>
-            <label className="block text-gray-500 dark:text-white/60 text-sm mb-1 font-body">Message / Goals</label>
+            <label className="block text-gray-500 dark:text-white/60 text-sm mb-1 font-body">Additional Notes</label>
             <textarea
               name="message"
               rows={3}
@@ -281,7 +336,9 @@ export default function ApplyForm() {
           </div>
 
           {status === 'error' && (
-            <p className="text-red-400 text-sm font-body">Something went wrong. Please try again.</p>
+            <p className="text-red-400 text-sm font-body">
+              {errorMessage || 'Something went wrong. Please try again.'}
+            </p>
           )}
 
           <button

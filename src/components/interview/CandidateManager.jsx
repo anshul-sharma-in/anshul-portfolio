@@ -1,79 +1,147 @@
 import { useState, useEffect, useCallback } from 'react'
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabaseClient'
 import EvaluationModal from './EvaluationModal'
 import { avg, formatScore, overallScore, scoreColor, subSkillLabel } from './evaluationHelpers'
 
 const STATUS_COLORS = {
-  pending: 'text-yellow-600 dark:text-yellow-300',
-  approved: 'text-green-600 dark:text-green-400',
-  time_suggested: 'text-blue-600 dark:text-blue-300',
+  applied: 'text-yellow-600 dark:text-yellow-300',
   scheduled: 'text-purple-600 dark:text-purple-300',
-  completed: 'text-gray-500 dark:text-gray-400',
-  done: 'text-fuchsia-600 dark:text-fuchsia-300',
+  confirmed: 'text-green-600 dark:text-green-400',
+  completed: 'text-fuchsia-600 dark:text-fuchsia-300',
+  reschedule_requested: 'text-blue-600 dark:text-blue-300',
   cancelled: 'text-red-600 dark:text-red-400',
-  no_show: 'text-orange-600 dark:text-orange-400',
 }
 
 const STATUS_LABELS = {
-  pending: 'Pending',
-  approved: 'Approved ✅',
-  time_suggested: 'Time Suggested 📅',
+  applied: 'Applied 📥',
   scheduled: 'Scheduled 🚀',
+  confirmed: 'Confirmed ✅',
   completed: 'Completed 🏁',
-  done: 'Done 🏁',
+  reschedule_requested: 'Reschedule Requested 🔄',
   cancelled: 'Cancelled ❌',
-  no_show: 'No-show 👻',
 }
 
 const HIDDEN_STATUSES = new Set(['rejected'])
 
-function SuggestTimeModal({ applicant, onClose, onConfirm }) {
-  const [datetime, setDatetime] = useState('')
-  const [note, setNote] = useState('')
+const DURATION_OPTIONS = [30, 45, 60, 90]
+
+function toLocalInputs(iso) {
+  if (!iso) return { date: '', time: '' }
+  const d = new Date(iso)
+  const pad = (n) => String(n).padStart(2, '0')
+  return {
+    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+  }
+}
+
+function ScheduleModal({ applicant, onClose, onConfirm }) {
+  const seed = toLocalInputs(applicant.scheduled_at)
+  const [date, setDate] = useState(seed.date)
+  const [time, setTime] = useState(seed.time)
+  const [duration, setDuration] = useState(applicant.duration_minutes || 60)
+  const [meetingLink, setMeetingLink] = useState(applicant.meeting_link || '')
+  const [instructions, setInstructions] = useState(applicant.schedule_instructions || '')
+  const [submitting, setSubmitting] = useState(false)
+
+  const isValid = date && time && meetingLink.trim().length > 0
+
+  const handleConfirm = async () => {
+    if (!isValid) return
+    setSubmitting(true)
+    const scheduledAt = new Date(`${date}T${time}`).toISOString()
+    await onConfirm({
+      scheduled_at: scheduledAt,
+      duration_minutes: Number(duration),
+      meeting_link: meetingLink.trim(),
+      schedule_instructions: instructions.trim() || null,
+    })
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="w-full max-w-md bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4"
+        className="w-full max-w-md bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 rounded-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto"
       >
-        <h3 className="text-gray-900 dark:text-white font-display font-bold text-lg">Suggest Interview Time</h3>
+        <h3 className="text-gray-900 dark:text-white font-display font-bold text-lg">Schedule Interview</h3>
         <p className="text-gray-500 dark:text-white/50 text-sm font-body">For: {applicant.name} ({applicant.email})</p>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-gray-500 dark:text-white/50 text-xs mb-1 font-body uppercase tracking-wider">Date</label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-gray-500 dark:text-white/50 text-xs mb-1 font-body uppercase tracking-wider">Time</label>
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
+            />
+          </div>
+        </div>
+
         <div>
-          <label className="block text-gray-500 dark:text-white/50 text-xs mb-1 font-body uppercase tracking-wider">Date &amp; Time</label>
+          <label className="block text-gray-500 dark:text-white/50 text-xs mb-1 font-body uppercase tracking-wider">Duration</label>
+          <select
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+            className="w-full px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
+          >
+            {DURATION_OPTIONS.map((d) => (
+              <option key={d} value={d}>{d} minutes</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-gray-500 dark:text-white/50 text-xs mb-1 font-body uppercase tracking-wider">Meeting Link *</label>
           <input
-            type="datetime-local"
-            value={datetime}
-            onChange={(e) => setDatetime(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
+            type="url"
+            placeholder="https://meet.google.com/… or https://zoom.us/…"
+            value={meetingLink}
+            onChange={(e) => setMeetingLink(e.target.value)}
+            className="w-full px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/20 focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
           />
         </div>
+
         <div>
-          <label className="block text-gray-500 dark:text-white/50 text-xs mb-1 font-body uppercase tracking-wider">Note (optional)</label>
-          <input
-            type="text"
-            maxLength={200}
-            placeholder="e.g. Google Meet link, platform…"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/20 focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm"
+          <label className="block text-gray-500 dark:text-white/50 text-xs mb-1 font-body uppercase tracking-wider">Instructions (optional)</label>
+          <textarea
+            rows={3}
+            maxLength={500}
+            placeholder="Anything the candidate should prepare or know beforehand…"
+            value={instructions}
+            onChange={(e) => setInstructions(e.target.value)}
+            className="w-full px-3 py-2.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/20 focus:outline-none focus:border-[#FF5800] transition-colors font-body text-sm resize-none"
           />
         </div>
+
         <div className="flex gap-3 pt-1">
           <button
             onClick={onClose}
-            className="flex-1 py-2 rounded-lg border border-gray-200 dark:border-white/20 text-gray-500 dark:text-white/60 text-sm font-body hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+            disabled={submitting}
+            className="flex-1 py-2 rounded-lg border border-gray-200 dark:border-white/20 text-gray-500 dark:text-white/60 text-sm font-body hover:bg-gray-100 dark:hover:bg-white/5 transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
           <button
-            disabled={!datetime}
-            onClick={() => onConfirm(datetime, note)}
+            disabled={!isValid || submitting}
+            onClick={handleConfirm}
             className="flex-1 py-2 rounded-lg text-white text-sm font-semibold transition-colors"
-            style={{ background: datetime ? '#FF5800' : '#333' }}
+            style={{ background: isValid && !submitting ? '#FF5800' : '#333' }}
           >
-            Confirm & Notify
+            {submitting ? 'Saving…' : 'Save & Notify'}
           </button>
         </div>
       </motion.div>
@@ -86,10 +154,11 @@ export default function CandidateManager() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [actionLoading, setActionLoading] = useState(null)
-  const [suggestTarget, setSuggestTarget] = useState(null)
+  const [scheduleTarget, setScheduleTarget] = useState(null)
   const [evalTarget, setEvalTarget] = useState(null)
   const [expandedId, setExpandedId] = useState(null)
   const [showCancelled, setShowCancelled] = useState(false)
+  const [resumeLoadingId, setResumeLoadingId] = useState(null)
 
   const fetchApplications = useCallback(async () => {
     setLoading(true)
@@ -104,27 +173,33 @@ export default function CandidateManager() {
 
   useEffect(() => { fetchApplications() }, [fetchApplications])
 
-  const sendStatusEmail = (applicant, newStatus, suggestedTime = '') => {
-    supabase.functions.invoke('notify-applicant', {
+  const sendStatusEmail = (applicant, newStatus, extras = {}) => {
+    const fnByStatus = {
+      scheduled: 'notify-applicant-scheduled',
+      completed: 'notify-applicant-completed',
+      cancelled: 'notify-applicant-cancelled',
+    }
+    const fn = fnByStatus[newStatus]
+    if (!fn) return
+    supabase.functions.invoke(fn, {
       body: {
         to_email: applicant.email,
         applicant_name: applicant.name,
-        new_status: newStatus,
-        suggested_time: suggestedTime,
         app_id: applicant.id,
         response_token: applicant.response_token,
+        ...extras,
       },
     }).catch(() => {})
   }
 
-  const updateStatus = async (row, newStatus, extra = {}) => {
+  const updateStatus = async (row, newStatus, extra = {}, emailExtras = null) => {
     setActionLoading(row.id)
     const { error: updateError } = await supabase
       .from('applications')
       .update({ status: newStatus, ...extra })
       .eq('id', row.id)
     if (!updateError) {
-      sendStatusEmail(row, newStatus, extra.suggested_time || '')
+      if (emailExtras !== false) sendStatusEmail(row, newStatus, emailExtras || {})
       setApplications((prev) =>
         prev.map((a) => a.id === row.id ? { ...a, status: newStatus, ...extra } : a)
       )
@@ -132,16 +207,23 @@ export default function CandidateManager() {
     setActionLoading(null)
   }
 
-  const handleSuggestConfirm = async (datetime, note) => {
-    const formatted = new Date(datetime).toLocaleString('en-IN', {
-      dateStyle: 'medium', timeStyle: 'short',
-    }) + (note ? ` — ${note}` : '')
-    await updateStatus(suggestTarget, 'time_suggested', { suggested_time: formatted })
-    setSuggestTarget(null)
+  const handleScheduleConfirm = async (schedule) => {
+    await updateStatus(
+      scheduleTarget,
+      'scheduled',
+      schedule,
+      {
+        scheduled_at: schedule.scheduled_at,
+        duration_minutes: schedule.duration_minutes,
+        meeting_link: schedule.meeting_link,
+        schedule_instructions: schedule.schedule_instructions,
+      },
+    )
+    setScheduleTarget(null)
   }
 
   const handleEvalSave = async (evaluation) => {
-    await updateStatus(evalTarget, 'done', { evaluation })
+    await updateStatus(evalTarget, 'completed', { evaluation })
     setEvalTarget(null)
   }
 
@@ -150,9 +232,26 @@ export default function CandidateManager() {
     updateStatus(row, 'cancelled')
   }
 
-  const handleNoShow = (row) => {
-    if (!window.confirm(`Mark ${row.name} as no-show?`)) return
-    updateStatus(row, 'no_show')
+  const handleViewResume = async (row) => {
+    if (!row.resume_url) return
+    setResumeLoadingId(row.id)
+    try {
+      // resume_url is stored as `resume/<filename>`. Strip the bucket prefix.
+      const path = row.resume_url.startsWith('resume/')
+        ? row.resume_url.slice('resume/'.length)
+        : row.resume_url
+      const { data, error: signErr } = await supabase
+        .storage
+        .from('resume')
+        .createSignedUrl(path, 60 * 10)
+      if (signErr || !data?.signedUrl) {
+        window.alert(`Could not generate resume link: ${signErr?.message || 'unknown error'}`)
+        return
+      }
+      window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+    } finally {
+      setResumeLoadingId(null)
+    }
   }
 
   if (loading) {
@@ -178,11 +277,11 @@ export default function CandidateManager() {
   return (
     <>
       <AnimatePresence>
-        {suggestTarget && (
-          <SuggestTimeModal
-            applicant={suggestTarget}
-            onClose={() => setSuggestTarget(null)}
-            onConfirm={handleSuggestConfirm}
+        {scheduleTarget && (
+          <ScheduleModal
+            applicant={scheduleTarget}
+            onClose={() => setScheduleTarget(null)}
+            onConfirm={handleScheduleConfirm}
           />
         )}
         {evalTarget && (
@@ -237,8 +336,11 @@ export default function CandidateManager() {
                       {a.phone ? ` · ${a.phone}` : ''}
                       {a.experience ? ` · ${a.experience} exp` : ''}
                     </p>
-                    {a.suggested_time && (
-                      <p className="text-blue-300/80 text-xs mt-1">🕐 {a.suggested_time}</p>
+                    {a.scheduled_at && (
+                      <p className="text-purple-500 dark:text-purple-300/90 text-xs mt-1">
+                        🚀 {new Date(a.scheduled_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                        {a.duration_minutes ? ` · ${a.duration_minutes} min` : ''}
+                      </p>
                     )}
                   </div>
 
@@ -254,37 +356,27 @@ export default function CandidateManager() {
 
                     {/* Action buttons */}
                     <div className="flex gap-1.5 flex-wrap justify-end" onClick={(e) => e.stopPropagation()}>
-                      {a.status !== 'done' && a.status !== 'cancelled' && a.status !== 'no_show' && (
-                        <>
-                          <button
-                            disabled={actionLoading === a.id || a.status === 'approved'}
-                            onClick={() => updateStatus(a, 'approved')}
-                            title="Approve"
-                            className="px-2.5 py-1.5 rounded-lg text-xs bg-green-500/20 text-green-700 dark:text-green-300 hover:bg-green-500/40 disabled:opacity-30 transition-colors"
-                          >
-                            ✓
-                          </button>
-                          <button
-                            disabled={actionLoading === a.id}
-                            onClick={() => setSuggestTarget(a)}
-                            title="Propose new time"
-                            className="px-2.5 py-1.5 rounded-lg text-xs bg-blue-500/20 text-blue-700 dark:text-blue-300 hover:bg-blue-500/40 disabled:opacity-30 transition-colors"
-                          >
-                            📅
-                          </button>
-                        </>
+                      {(a.status === 'applied' || a.status === 'reschedule_requested' || a.status === 'scheduled' || a.status === 'confirmed') && (
+                        <button
+                          disabled={actionLoading === a.id}
+                          onClick={() => setScheduleTarget(a)}
+                          title={a.scheduled_at ? 'Reschedule interview' : 'Schedule interview'}
+                          className="px-3 py-1.5 rounded-lg text-xs bg-[#FF5800]/15 text-[#FF5800] hover:bg-[#FF5800]/30 disabled:opacity-30 transition-colors font-semibold"
+                        >
+                          {a.scheduled_at ? '🔄 Reschedule' : '📅 Schedule Interview'}
+                        </button>
                       )}
-                      {(a.status === 'scheduled' || a.status === 'approved' || a.status === 'time_suggested') && (
+                      {(a.status === 'scheduled' || a.status === 'confirmed') && (
                         <button
                           disabled={actionLoading === a.id}
                           onClick={() => setEvalTarget(a)}
-                          title="Evaluate & mark done"
+                          title="Mark completed & evaluate"
                           className="px-2.5 py-1.5 rounded-lg text-xs bg-fuchsia-500/20 text-fuchsia-700 dark:text-fuchsia-300 hover:bg-fuchsia-500/40 disabled:opacity-30 transition-colors"
                         >
-                          🏁
+                          🏁 Complete
                         </button>
                       )}
-                      {a.status === 'done' && (
+                      {a.status === 'completed' && (
                         <button
                           onClick={() => setEvalTarget(a)}
                           title="Edit evaluation"
@@ -293,17 +385,7 @@ export default function CandidateManager() {
                           ✏️
                         </button>
                       )}
-                      {a.status === 'scheduled' && (
-                        <button
-                          disabled={actionLoading === a.id}
-                          onClick={() => handleNoShow(a)}
-                          title="No-show"
-                          className="px-2.5 py-1.5 rounded-lg text-xs bg-orange-500/20 text-orange-700 dark:text-orange-300 hover:bg-orange-500/40 disabled:opacity-30 transition-colors"
-                        >
-                          👻
-                        </button>
-                      )}
-                      {a.status !== 'cancelled' && a.status !== 'done' && (
+                      {a.status !== 'cancelled' && a.status !== 'completed' && (
                         <button
                           disabled={actionLoading === a.id}
                           onClick={() => handleCancel(a)}
@@ -383,12 +465,18 @@ export default function CandidateManager() {
                           )}
                         </div>
                       )}
-                      {(a.role || a.tech_stack) && (
+                      {(a.role || a.tech_stack || a.interview_type) && (
                         <div className="mt-3 flex flex-wrap gap-4">
                           {a.role && (
                             <div>
                               <p className="text-gray-400 dark:text-white/40 text-xs uppercase tracking-wider mb-1 font-body">Role</p>
                               <span className="px-2 py-0.5 rounded text-xs font-semibold" style={{ background: 'rgba(255,88,0,0.1)', color: '#FF5800', border: '1px solid rgba(255,88,0,0.3)' }}>{a.role}</span>
+                            </div>
+                          )}
+                          {a.interview_type && (
+                            <div>
+                              <p className="text-gray-400 dark:text-white/40 text-xs uppercase tracking-wider mb-1 font-body">Interview Type</p>
+                              <span className="px-2 py-0.5 rounded text-xs font-semibold" style={{ background: 'rgba(13,115,119,0.12)', color: '#0D7377', border: '1px solid rgba(13,115,119,0.3)' }}>{a.interview_type}</span>
                             </div>
                           )}
                           {a.tech_stack && (
@@ -401,14 +489,13 @@ export default function CandidateManager() {
                       )}
                       {a.resume_url && (
                         <div className="mt-3">
-                          <a
-                            href={a.resume_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white/80 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
+                          <button
+                            onClick={() => handleViewResume(a)}
+                            disabled={resumeLoadingId === a.id}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white/80 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors disabled:opacity-50"
                           >
-                            📎 View Resume
-                          </a>
+                            📎 {resumeLoadingId === a.id ? 'Opening…' : 'View Resume'}
+                          </button>
                         </div>
                       )}
                       {a.preferred_time && (
@@ -417,10 +504,25 @@ export default function CandidateManager() {
                           <p className="text-[#FFD500]/80 text-sm font-body">📅 {a.preferred_time}</p>
                         </div>
                       )}
-                      {a.suggested_time && (
-                        <div className="mt-3">
-                          <p className="text-gray-400 dark:text-white/40 text-xs uppercase tracking-wider mb-1 font-body">Suggested Time</p>
-                          <p className="text-blue-400 text-sm font-body">📅 {a.suggested_time}</p>
+                      {a.scheduled_at && (
+                        <div className="mt-3 rounded-lg border border-purple-300/30 bg-purple-500/5 p-3 space-y-1">
+                          <p className="text-gray-400 dark:text-white/40 text-xs uppercase tracking-wider font-body">Scheduled</p>
+                          <p className="text-purple-500 dark:text-purple-300 text-sm font-body">
+                            🚀 {new Date(a.scheduled_at).toLocaleString('en-IN', { dateStyle: 'full', timeStyle: 'short' })}
+                            {a.duration_minutes ? ` · ${a.duration_minutes} min` : ''}
+                          </p>
+                          {a.meeting_link && (
+                            <p className="text-xs font-body break-all">
+                              <a href={a.meeting_link} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                                🔗 {a.meeting_link}
+                              </a>
+                            </p>
+                          )}
+                          {a.schedule_instructions && (
+                            <p className="text-gray-600 dark:text-white/70 text-xs font-body whitespace-pre-wrap mt-1">
+                              {a.schedule_instructions}
+                            </p>
+                          )}
                         </div>
                       )}
                       <div className="mt-4">

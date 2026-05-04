@@ -111,7 +111,7 @@ function LoginScreen({ onLogin }) {
                 maxLength={8}
                 required
                 autoFocus
-                placeholder="00000000"
+                placeholder="000000"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                 className="w-full px-4 py-2.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white text-center tracking-widest text-lg placeholder-gray-400 dark:placeholder-white/20 focus:outline-none focus:border-[#0D7377] transition-colors font-body"

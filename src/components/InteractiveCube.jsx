@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom'
 const FACES = [
   { label: 'About Me',   sub: 'who I am',     color: '#FF5800', textColor: '#ffffff', pos: [0, 0, 1.51],  rot: [0, 0, 0],                to: '/about' },
   { label: 'Projects',   sub: 'what I built', color: '#0045AD', textColor: '#ffffff', pos: [0, 0, -1.51], rot: [0, Math.PI, 0],          to: '/projects' },
-  { label: 'Skills',     sub: 'tech stack',   color: '#009E60', textColor: '#ffffff', pos: [1.51, 0, 0],  rot: [0, Math.PI / 2, 0],      to: '/skills' },
+  { label: 'Resources',  sub: 'study material', color: '#009E60', textColor: '#ffffff', pos: [1.51, 0, 0],  rot: [0, Math.PI / 2, 0],      to: '/resources' },
   { label: 'Experience', sub: 'my journey',   color: '#C41E3A', textColor: '#ffffff', pos: [-1.51, 0, 0], rot: [0, -Math.PI / 2, 0],     to: '/experience' },
   { label: 'Contact',    sub: 'get in touch', color: '#FFD500', textColor: '#111111', pos: [0, 1.51, 0],  rot: [-Math.PI / 2, 0, 0],     to: '/contact' },
   { label: 'Interview',  sub: 'mock prep',    color: '#0D7377', textColor: '#ffffff', pos: [0, -1.51, 0], rot: [Math.PI / 2, 0, 0],      to: '/interview' },

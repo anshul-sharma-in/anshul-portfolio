@@ -1,21 +1,18 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useFunMode } from '../context/FunModeContext'
-import { MiniRubiksCube } from './RubiksCube3D'
 import BrandLogo from './BrandLogo'
 
 const NAV_LINKS = [
+  { to: '/', label: 'Home', end: true },
+  { to: '/interview', label: 'Mock Interviews' },
   { to: '/about', label: 'About' },
-  { to: '/projects', label: 'Projects' },
-  { to: '/skills', label: 'Skills' },
   { to: '/experience', label: 'Experience' },
+  { to: '/projects', label: 'Portfolio' },
   { to: '/contact', label: 'Contact' },
-  { to: '/interview', label: 'Interview' },
 ]
 
 export default function Navbar() {
-  const { toggleFunMode } = useFunMode()
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -29,9 +26,9 @@ export default function Navbar() {
           title="Anshul Sharma — Home"
         >
           <BrandLogo size={28} />
-          <span className="font-display font-bold text-lg text-gray-900 tracking-wide group-hover:text-[#FF5800] transition-colors">
+          {/* <span className="font-display font-bold text-lg text-gray-900 tracking-wide group-hover:text-[#FF5800] transition-colors">
             Anshul Sharma
-          </span>
+          </span> */}
         </button>
 
         {/* Desktop nav links */}
@@ -40,6 +37,7 @@ export default function Navbar() {
             <NavLink
               key={link.to}
               to={link.to}
+              end={link.end}
               className={({ isActive }) =>
                 `px-3 py-1.5 rounded-md text-sm font-body font-medium transition-colors ${
                   isActive
@@ -55,14 +53,6 @@ export default function Navbar() {
 
         {/* Right controls */}
         <div className="flex items-center gap-3">
-          <button
-            onClick={toggleFunMode}
-            title="Switch to Cube Mode"
-            className="hidden md:flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <MiniRubiksCube size={34} />
-          </button>
-
           {/* Mobile hamburger */}
           <button
             onClick={() => setMobileOpen((o) => !o)}
@@ -96,6 +86,7 @@ export default function Navbar() {
               <NavLink
                 key={link.to}
                 to={link.to}
+                end={link.end}
                 onClick={() => setMobileOpen(false)}
                 className={({ isActive }) =>
                   `block px-3 py-2.5 rounded-md text-sm font-body font-medium transition-colors ${
@@ -108,14 +99,6 @@ export default function Navbar() {
                 {link.label}
               </NavLink>
             ))}
-            <div className="border-t border-gray-100 mt-2 pt-2">
-              <button
-                onClick={() => { toggleFunMode(); setMobileOpen(false) }}
-                className="flex items-center gap-2 px-3 py-2.5 text-sm font-body font-medium text-gray-500 hover:text-[#FF5800] transition-colors"
-              >
-                🧩 Switch to Cube Mode
-              </button>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -37,12 +37,12 @@ const BLOCKS = [
     desc: 'connect',
   },
   {
-    label: 'Skills',
+    label: 'Resources',
     emoji: '⚡',
     color: '#009E60',
     textColor: '#fff',
-    to: '/skills',
-    desc: 'tech stack',
+    to: '/resources',
+    desc: 'study material',
   },
   {
     label: 'Contact',

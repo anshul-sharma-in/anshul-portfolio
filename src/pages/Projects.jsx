@@ -8,7 +8,7 @@ const PROJECTS = [
     tech: ['Vue.js', 'Python', 'Text-to-Speech API'],
     github: 'https://github.com/anshul-sharma-in/grandfather-stories',
     githubBackend: 'https://github.com/anshul-sharma-in/speaker-backend',
-    live: 'https://stories.anshulsharma.net/',
+    live: 'https://anshulsharma.net/stories',
     color: '#FF5800',
   },
   {
@@ -27,6 +27,15 @@ const PROJECTS = [
     live: null,
     color: '#009E60',
   },
+  {
+    title: 'Urban Ticket',
+    desc: 'Online ticket booking platform built as my CDAC final project. Users can search, book, and manage tickets for movies and events with auth, seat selection, booking management, and payment integration. Includes an admin panel to manage events, schedules, and bookings.',
+    tech: ['Angular', 'Spring Boot', 'MySQL'],
+    github: 'https://github.com/anshul-sharma-in/urban-ticket-UI',
+    githubBackend: 'https://github.com/anshul-sharma-in/urban-ticket-backend',
+    live: 'https://anshulsharma.net/urban-ticket',
+    color: '#C41E3A',
+  },
 ]
 
 export default function Projects() {
@@ -42,7 +51,7 @@ export default function Projects() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="glass-card hover:border-gray-300 dark:hover:border-white/30 transition-all duration-300 group"
+              className="glass-card hover:border-gray-300 dark:hover:border-white/30 transition-all duration-300 group flex flex-col h-full"
               style={{ borderTop: `3px solid ${p.color}` }}
             >
               <h3 className="font-display font-bold text-lg text-gray-900 dark:text-white group-hover:text-[#FF5800] transition-colors">
@@ -62,7 +71,7 @@ export default function Projects() {
                 ))}
               </div>
 
-              <div className="mt-4 flex gap-3">
+              <div className="mt-auto pt-4 flex gap-3 flex-wrap">
                 {p.github && (
                   <a href={p.github} target="_blank" rel="noopener noreferrer" className="btn-outline text-xs px-4 py-2">
                     GitHub

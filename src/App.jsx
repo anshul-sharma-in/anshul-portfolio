@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from 'framer-motion'
 import Home from './pages/Home'
 import About from './pages/About'
 import Projects from './pages/Projects'
-import Skills from './pages/Skills'
 import Experience from './pages/Blog'
 import Contact from './pages/Contact'
 import Interview from './pages/Interview'
@@ -50,10 +49,10 @@ function AnimatedRoutes() {
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/projects" element={<Projects />} />
-            <Route path="/skills" element={<Skills />} />
             <Route path="/experience" element={<Experience />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/interview" element={<Interview />} />
+            <Route path="/resources" element={<Interview initialSection="resources" />} />
             <Route path="/admin" element={<Interview adminMode />} />
           </Routes>
         </AnimatePresence>

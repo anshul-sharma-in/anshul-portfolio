@@ -131,12 +131,19 @@ function AdminLoginModal({ onLogin, onClose }) {
   )
 }
 
-export default function Interview({ adminMode = false }) {
+export default function Interview({ adminMode = false, initialSection }) {
   const navigate = useNavigate()
   const [admin, setAdmin] = useState(null)
   const [sessionChecked, setSessionChecked] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
-  const [activeSection, setActiveSection] = useState('apply')
+  const [activeSection, setActiveSection] = useState(() => {
+    if (initialSection) return initialSection
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.replace(/^#/, '')
+      if (hash && SECTIONS.some((s) => s.id === hash && s.public)) return hash
+    }
+    return 'apply'
+  })
 
   // Restore existing session on mount (e.g. page refresh)
   useEffect(() => {

@@ -85,7 +85,7 @@ export default function ResultsTab() {
     const { data, error: err } = await supabase
       .from('applications')
       .select('*')
-      .eq('status', 'done')
+      .eq('status', 'completed')
       .not('evaluation', 'is', null)
       .order('created_at', { ascending: false })
     if (err) setError(err.message)
